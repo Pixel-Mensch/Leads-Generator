@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SearchJob {
+  id          String    @id @default(cuid())
+  query       String
+  location    String
+  radius      Int?
+  source      String    @default("overpass")
+  status      JobStatus @default(PENDING)
+  totalFound  Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  leads       Lead[]
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Lead {
+  id          String     @id @default(cuid())
+  companyName String
+  website     String?
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  category    String?
+  sourceUrl   String?
+  confidence  Float?
+
+  status      LeadStatus @default(NEW)
+  notes       String?
+  contactedAt DateTime?
+
+  jobId       String
+  job         SearchJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([jobId, companyName, phone], name: "unique_lead_in_job")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  NOT_INTERESTED
+  CONVERTED
+  INVALID
+}
