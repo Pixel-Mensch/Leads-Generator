@@ -74,9 +74,11 @@
 ## Aktueller Repo-Stand
 
 - **Branch:** `dev`
+- **Remote-Status:** `dev` ist bis `80c583b` auf `origin/dev` gepusht
 - **Relevante neue Commits auf `dev`:**
   - `a59d27d` - `fix: sharpen dashboard lead workflow`
   - `e0180ed` - `fix: improve lead action surfaces`
+  - `80c583b` - `docs: refresh ux handoff state`
   - Vorherige Stabilisierung darunter: Prisma-/Build-Reparatur, SaaS-Haertung sowie Scraper-/Export-Qualitaetsfixes
 - **Relevanter `main`-Stand:** `c1a2276`
 - **Status von `main`:** nicht freigegeben
