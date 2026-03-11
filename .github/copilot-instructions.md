@@ -39,6 +39,15 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - Feature-Branches von `dev` abzweigen: `feat/`, `fix/`, `chore/`
 - Kein Merge nach `main` ohne erfolgreiches `npm run db:generate`, `npm run build`, `npm run lint`, Live-Migration, Smoke-Test und Handoff-Update
 
+## Lokaler Minimalstart
+- `.env.example` nach `.env` kopieren
+- `AUTH_SECRET` lokal setzen
+- `docker compose up db -d`
+- `npm run db:generate`
+- `npm run db:migrate`
+- `npm run dev`
+- Aktuelle externe Quellen: Overpass, Nominatim, Gelbe Seiten; dafuer sind derzeit keine API-Keys noetig
+
 ## Aenderungsdisziplin
 - Kleine, fokussierte Aenderungen - ein Concern pro Commit
 - Kein Refactoring ausserhalb der aktuellen Aufgabe

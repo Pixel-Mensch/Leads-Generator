@@ -6,19 +6,25 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Stabilisierung + SaaS-Haertung + Scraper-Qualitaet)
+## Aktueller Stand (2026-03-11, lokaler Startpfad real verifiziert)
 
-**Der technische Unterbau auf `dev` ist lokal glaubwuerdig und die SaaS-Grundschutzpfade sind gehaertet. `main` bleibt trotzdem blockiert, bis DB-Migration und echter Auth/Search/Export-Smoke-Test gegen eine laufende Postgres-Instanz erfolgt sind.**
+**`dev` ist jetzt lokal real startbar. Docker-Postgres, Prisma-Migration, Auth, eine echte Overpass-Suche und CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offene Rest-Risiken sind fehlende Browser-E2E-Abnahme und kein frischer Gelbe-Seiten-Live-Smoke-Test.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
 - `npm run db:generate` laeuft wieder
+- `docker compose up db -d` wurde erfolgreich gegen Docker Desktop ausgefuehrt; der `db`-Container ist healthy
+- `npm run db:migrate` wurde erfolgreich gegen die laufende lokale Postgres-DB ausgefuehrt
+- `npm run db:migrate:status` meldet jetzt `Database schema is up to date`
 - `npm run lint` laeuft wieder
 - `npm run build` laeuft wieder
 - Prisma 7 laeuft jetzt ueber `prisma.config.ts` und `@prisma/adapter-pg`
 - Next.js 16 nutzt `proxy.ts` statt `middleware.ts`, und unautorisierte Seitenzugriffe auf `/projects` wurden real mit `307 -> /login` verifiziert
 - Eine Initial-Migration ist versioniert in `prisma/migrations/20260311081500_init`
 - Lokaler Dev-Boot wurde gegen `/login` mit `HTTP 200` geprueft
-- Docker Compose ist syntaktisch valide, aber der reale DB-Start konnte auf diesem Host nicht abgeschlossen werden, weil der Docker-Daemon nicht lief
+- Registrierung, Credentials-Login, `/api/me` und `/api/projects` wurden gegen die echte lokale DB verifiziert
+- Authentifizierte Seiten `/`, `/projects` und `/search` liefern mit Session `HTTP 200`
+- Ein echter Overpass-Job lief lokal auf `COMPLETED` und speicherte 50 Leads
+- CSV- und XLSX-Export wurden lokal mit echtem Job/Lead-Bestand auf `HTTP 200` verifiziert
 - `requireAuth()` holt den aktuellen User-Status jetzt authoritativ aus der DB
 - Ownership fuer Lead-Listen-Zuordnung wird jetzt projektbezogen serverseitig validiert
 - Listen-Limits werden serverseitig erzwungen und in der UI sichtbar gemacht
@@ -48,7 +54,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | Tailwind CSS | 4.x | aktiv |
 | Prisma ORM | 7.4.2 | aktiv, mit `prisma.config.ts` |
 | `@prisma/adapter-pg` | 7.4.2 | aktiv |
-| PostgreSQL | 16 | Docker Compose vorbereitet |
+| PostgreSQL | 16 | Docker Compose lokal verifiziert |
 | next-auth | v5 beta | JWT-Auth implementiert |
 | bcryptjs | 3.x | Passwort-Hashing aktiv |
 | Cheerio | 1.x | Gelbe Seiten Scraper |
@@ -97,18 +103,17 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | /api/leads/stats | fertig |
 | /api/leads/bulk | fertig |
 | Dashboard-Filterkontext (Suche, Follow-up, Export) | verbessert |
-| Initial-Migration | fertig, aber noch nicht live angewendet |
+| Initial-Migration | fertig, live auf lokaler Docker-DB angewendet |
 
 ## Bekannte Probleme / Luecken
 
-- **Live-DB nicht verifiziert** - `docker compose up db -d` scheiterte auf diesem Host, weil der Docker-Desktop-Daemon nicht lief
-- **Migration nicht live angewendet** - Initial-Migration ist erzeugt, aber `npm run db:migrate` wurde in dieser Session nicht gegen eine laufende DB ausgefuehrt
-- **Kein End-to-End-Smoke-Test** - Register/Login/Projekt/Suche/Export wurden noch nicht als kompletter Flow durchgetestet
 - **Keine Test-Suite** - keine Unit- oder Integration-Tests vorhanden
+- **Kein kompletter Browser-Smoke-Test** - Kernpfade sind ueber HTTP/API real verifiziert, aber nicht per manuellem UI-Klickpfad im Browser abgenommen
+- **Gelbe Seiten in dieser Session nicht live als kompletter Job erneut verifiziert** - der lokale Such-Smoke lief ueber Overpass
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
-- **Dashboard nur gegen API verifiziert** - neue Such-/Follow-up-Filter sind build- und lint-gruen, aber noch nicht in einem manuellen Browser-Smoke-Test mit echter DB durchgeklickt
+- **Dashboard nur per HTTP verifiziert** - neue Such-/Follow-up-Filter sind build- und lint-gruen, aber noch nicht manuell in einem Browser-Smoke-Test gegen echte DB durchgeklickt
 - **Lead-Arbeitsflaechen nur technisch verifiziert** - Schnellaktionen, Mobile-Karten und Detailseiten-Workflows sind build-/lint-gruen, aber noch nicht manuell im Browser gegen echte Daten abgenommen
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
@@ -118,6 +123,6 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 ## Risiken
 
 - next-auth v5 beta kann noch API-Aenderungen haben
-- Prisma 7 + Adapter-Pfad ist build-verifiziert, sollte aber nach echter DB-Migration noch einmal gegen reale Queries geprueft werden
+- Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` ist noch nicht release-faehig, solange DB-Migration und Smoke-Test fehlen
+- `main` sollte erst nach einer expliziten Release-Entscheidung und einem kurzen Browser-Smoke-Test aktualisiert werden

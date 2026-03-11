@@ -30,40 +30,33 @@
 - [2026-03-11] Scraper-/Export-Qualitaet gehaertet: Gelbe-Seiten-Live-HTML validiert, Filter-Exporte vervollstaendigt, Confidence-Transparenz verbessert
 - [2026-03-11] UX-Dashboard gehaertet: serverseitige Suche, Follow-up-Filter, konsistente KPI-/Export-Kontexte und stabileres Job-Status-Polling
 - [2026-03-11] Lead-UX gehaertet: Schnellaktionen in Tabelle/Detailseite, besserer Ruecksprung in Suchlaeufe und sauberere Mobile-Navigation
+- [2026-03-11] Docker Desktop lokal gestartet, `docker compose up db -d` erfolgreich ausgefuehrt und Postgres-Container healthy verifiziert
+- [2026-03-11] Initial-Migration live gegen lokale Docker-Postgres-DB angewendet und `npm run db:migrate:status` geprueft
+- [2026-03-11] Lokaler Kernflow real verifiziert: Register, Credentials-Login, `/api/me`, `/api/projects`, Overpass-Suche mit 50 Leads, CSV/XLSX-Export und authentifizierte Seiten `/`, `/projects`, `/search`
 
 ---
 
 ## Aktive Aufgaben
 
-### [P1] Docker-Daemon starten und Live-Migration anwenden
+### [P1] Manuellen Browser-Smoke-Test fuer finale Release-Freigabe durchfuehren
 - **Status:** TODO
-- **Problem:** `docker compose up db -d` scheiterte lokal, weil der Docker-Desktop-Daemon nicht verfuegbar war
-- **Befehle:**
-  ```bash
-  docker compose up db -d
-  npm run db:migrate
-  ```
-- **Erwartetes Ergebnis:** PostgreSQL laeuft lokal und die Initial-Migration ist angewendet
+- **Schritte:** Register/Login im Browser klicken, Dashboard-Filter pruefen, Lead-Detailseite oeffnen, Export aus der UI ausloesen
+- **Erwartetes Ergebnis:** letzter manuell sichtbarer UI-Check vor einer Promotion nach `main`
 
-### [P1] Authentifizierten Smoke-Test komplett ausfuehren
+### [P1] Gelbe-Seiten-Quelle erneut als echter Job smoke-testen
 - **Status:** TODO
-- **Schritte:** Register -> Login -> Projekt anlegen -> Suche starten -> Dashboard pruefen -> Export pruefen
-- **Erwartetes Ergebnis:** kompletter Kernflow laeuft mit echter DB stabil durch
+- **Problem:** In dieser Session wurde nur der Overpass-Pfad als kompletter Suchlauf mit echter DB verifiziert
+- **Erwartetes Ergebnis:** `source=gelbeseiten` oder `source=both` laeuft ebenfalls nachvollziehbar durch
 
-### [P1] Release-Entscheidung fuer `main` nach Live-DB-Test treffen
+### [P1] Release-Entscheidung fuer `main` auf Basis des jetzt verifizierten Lokalstarts treffen
 - **Status:** TODO
-- **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und Smoke-Test gruen
+- **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und lokaler Kernflow sind gruen; optionaler Browser-/Gelbe-Seiten-Smoke klaert das Restrisiko
 - **Erwartetes Ergebnis:** dokumentiertes Ja/Nein fuer Promotion nach `main`
 
 ### [P2] Session-Freshness bei Plan- oder Statuswechsel pruefen
 - **Status:** TODO
 - **Problem:** API-Schutz ist DB-authoritativ, das Layout zeigt Session-Daten weiter aus JWT
 - **Erwartetes Ergebnis:** Klar dokumentiert, ob Plan-/Deactivate-Aenderungen ohne Re-Login im UI sofort sichtbar sein muessen
-
-### [P2] Export- und Scraper-Smoke-Test gegen echte DB ausfuehren
-- **Status:** TODO
-- **Schritte:** Suche starten -> Leads pruefen -> CSV/XLSX mit `tag`, `category`, `sourceName` und `listId` testen
-- **Erwartetes Ergebnis:** reale Scraper-Ergebnisse und Exporte stimmen mit UI-Filtern und Meta-Infos ueberein
 
 ### [P2] Neue Dashboard-Filter im Browser gegen echte DB pruefen
 - **Status:** TODO

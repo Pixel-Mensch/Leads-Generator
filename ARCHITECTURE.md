@@ -1,6 +1,6 @@
 # ARCHITECTURE.md
 
-> Stand: 2026-03-11 - Stabilisierung auf `dev`, nicht fuer `main` freigegeben
+> Stand: 2026-03-11 - `dev` lokal startbar verifiziert, `main` noch nicht promoted
 
 ## High-Level Struktur
 
@@ -140,6 +140,7 @@ API-Schutz:
 - JWT-Strategie ohne Session-Table
 - `proxy.ts` schuetzt App-Seiten, API-Auth bleibt in den Route-Handlern
 - `AUTH_SECRET` und `AUTH_URL` kommen aus `.env`
+- `AUTH_SECRET` wird nur fuer Auth.js JWT-/Cookie-Signing benoetigt; es gibt aktuell keine OAuth-Provider
 - Login und Registrierung normalisieren E-Mail-Adressen auf lowercase
 
 ## Prisma- / DB-Architektur
@@ -148,6 +149,16 @@ API-Schutz:
 - Runtime-Zugriff laeuft ueber `@prisma/adapter-pg` und `pg`
 - Initiale SQL-Migration liegt in `prisma/migrations/20260311081500_init`
 - Lokaler Standard-DB-String zeigt auf die Docker-Postgres-Instanz unter `localhost:5432`
+- Minimaler lokaler Runtime-Pfad braucht `DATABASE_URL`, `AUTH_SECRET` und `AUTH_URL`; `POSTGRES_*` wird nur fuer `docker compose` benoetigt
+- `docker compose up db -d`, `npm run db:generate` und `npm run db:migrate` wurden am 2026-03-11 lokal erfolgreich verifiziert
+
+## Externe Schnittstellen
+
+- PostgreSQL ueber `DATABASE_URL`
+- Overpass API via `https://overpass-api.de/api/interpreter`
+- Nominatim via `https://nominatim.openstreetmap.org/search`
+- Gelbe Seiten via `https://www.gelbeseiten.de`
+- Fuer diese Quellen sind aktuell keine API-Keys oder OAuth-Secrets notwendig
 
 ## Plan-Limits (`lib/limits.ts`)
 

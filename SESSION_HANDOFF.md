@@ -4,7 +4,7 @@
 
 ### Ergebnis
 
-**`dev` ist technisch deutlich stabiler, lokal bootbar und um die kritischen SaaS-Schutzpfade gehaertet. `main` bleibt blockiert, bis die DB live gestartet, die Migration angewendet und der Kernflow mit echter Auth/Search/Export-Nutzung getestet wurde.**
+**`dev` ist jetzt lokal real startbar. Docker-Postgres, Prisma-Migration, Register/Login, `/api/me`, `/api/projects`, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
 
 ### Was umgesetzt wurde
 
@@ -44,6 +44,9 @@
 - `db:migrate:deploy` und `db:migrate:status` in `package.json` ergaenzt
 - Compose-Warnung bereinigt (`version` entfernt)
 - `.env.example` auf echten globalen Scrape-Cap gebracht
+- Docker Desktop lokal gestartet und `docker compose up db -d` erfolgreich ausgefuehrt
+- `npm run db:migrate` erfolgreich gegen die lokale Docker-Postgres-DB ausgefuehrt
+- `npm run db:migrate:status` meldet `Database schema is up to date`
 
 **Doku:**
 - README auf echten Stack, echte SaaS-Schutzpfade und echten Startpfad gebracht
@@ -52,11 +55,20 @@
 ### Reale Verifikation
 
 - `npm run db:generate` -> erfolgreich
+- `docker compose up db -d` -> erfolgreich, `db`-Container healthy auf `localhost:5432`
+- `npm run db:migrate` -> erfolgreich
+- `npm run db:migrate:status` -> erfolgreich
 - `npm run lint` -> erfolgreich
 - `npm run build` -> erfolgreich
 - `docker compose config` -> erfolgreich
 - Dev-Boot-Test -> `GET /login` lieferte `HTTP 200`
 - Protected-Route-Test -> `GET /projects` lieferte `307 -> /login?...`
+- Register-Smoke -> `POST /api/register` erfolgreich, Default-Projekt automatisch angelegt
+- Login-Smoke -> Auth.js Credentials-Login erfolgreich, `/api/auth/session` liefert Session
+- Auth-API-Smoke -> `/api/me` und `/api/projects` erfolgreich gegen echte Session
+- Authentifizierte Seiten -> `/`, `/projects` und `/search` liefern `HTTP 200`
+- Overpass-Smoke -> echter Job auf `COMPLETED`, 50 Leads gespeichert
+- Export-Smoke -> `/api/export/csv` und `/api/export/xlsx` liefern `HTTP 200` gegen den echten Job-Bestand
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
 - Neue Dashboard-Filterlogik (`q`, `followUp`) sowie Export-/Stats-Pfade sind build-, lint- und Prisma-generate-verifiziert
@@ -64,9 +76,8 @@
 
 ### Nicht erfolgreich bzw. noch offen
 
-- `docker compose up db -d` -> fehlgeschlagen, weil der Docker-Desktop-Daemon auf diesem Host nicht lief
-- `npm run db:migrate` -> deshalb in dieser Session nicht live ausgefuehrt
-- Register/Login/Projekt/Suche/Export -> kein kompletter E2E-Smoke-Test gegen echte DB
+- Kein kompletter manueller Browser-Smoke-Test fuer die UI-Flaechen
+- Gelbe-Seiten-Quelle wurde in dieser Session nicht erneut als kompletter Suchjob verifiziert
 - Keine automatisierten Tests vorhanden
 
 ---
@@ -74,11 +85,12 @@
 ## Aktueller Repo-Stand
 
 - **Branch:** `dev`
-- **Remote-Status:** `dev` ist bis `80c583b` auf `origin/dev` gepusht
+- **Remote-Status:** `origin/dev` steht bei `481e362`; diese Session fuegt dazu neue lokale Verifikations- und Doku-Aenderungen hinzu
 - **Relevante neue Commits auf `dev`:**
   - `a59d27d` - `fix: sharpen dashboard lead workflow`
   - `e0180ed` - `fix: improve lead action surfaces`
   - `80c583b` - `docs: refresh ux handoff state`
+  - `481e362` - `docs: note dev push state`
   - Vorherige Stabilisierung darunter: Prisma-/Build-Reparatur, SaaS-Haertung sowie Scraper-/Export-Qualitaetsfixes
 - **Relevanter `main`-Stand:** `c1a2276`
 - **Status von `main`:** nicht freigegeben
@@ -87,17 +99,9 @@
 
 ## Was als naechstes getan werden muss
 
-1. Docker Desktop / Docker-Daemon starten
-2. `docker compose up db -d`
-3. `npm run db:migrate`
-4. Smoke-Test komplett ausfuehren:
-   - `/register`
-   - `/login`
-   - `/projects`
-   - `/search`
-   - Dashboard Bulk-/Filter-/KPI-Funktionen
-   - CSV/XLSX Export
-5. Danach Release-Entscheidung fuer `main` neu treffen
+1. Manuellen Browser-Smoke-Test fuer UI-Flows durchklicken
+2. Gelbe-Seiten-Quelle als echten Job erneut smoke-testen
+3. Danach Release-Entscheidung fuer `main` explizit treffen
 
 ---
 
@@ -124,5 +128,6 @@
 ## Warnungen und bekannte Grenzfaelle
 
 - `.env` wurde lokal fuer die Verifikation angelegt und ist nicht committed
+- Die lokale Docker-DB enthaelt jetzt Smoke-Daten (ein Test-User, Default-Projekt und ein Overpass-Job mit 50 Leads)
 - `.claude/settings.local.json` ist weiterhin lokal modifiziert und wurde bewusst nicht angeruehrt
-- `main` darf nicht aktualisiert werden, bevor die Live-DB-Schritte wirklich gruen sind
+- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise einem kurzen Browser-Smoke-Test aktualisiert werden
