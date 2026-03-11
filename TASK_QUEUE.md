@@ -27,6 +27,7 @@
 - [2026-03-11] SaaS-Audit abgeschlossen: API-Ownership, Listen-Limits, E-Mail-Normalisierung und PENDING-only Job-Start gehaertet
 - [2026-03-11] Protected-Page-Redirect real verifiziert (`GET /projects -> 307 /login`)
 - [2026-03-11] Kernqualitaet gehaertet: URL-/Firmennamen-Normalisierung, Dedup-Merge und Overpass-Fallback verbessert
+- [2026-03-11] Scraper-/Export-Qualitaet gehaertet: Gelbe-Seiten-Live-HTML validiert, Filter-Exporte vervollstaendigt, Confidence-Transparenz verbessert
 
 ---
 
@@ -57,15 +58,14 @@
 - **Problem:** API-Schutz ist DB-authoritativ, das Layout zeigt Session-Daten weiter aus JWT
 - **Erwartetes Ergebnis:** Klar dokumentiert, ob Plan-/Deactivate-Aenderungen ohne Re-Login im UI sofort sichtbar sein muessen
 
-### [P2] Gelbe Seiten Selektoren live validieren
+### [P2] Export- und Scraper-Smoke-Test gegen echte DB ausfuehren
 - **Status:** TODO
-- **Datei:** `lib/scraper/sources/gelbeseiten.ts`
-- **Problem:** Cheerio-Selektoren sind heuristisch und koennen brechen
-- **Erwartetes Ergebnis:** Reale Ergebnisse aus gelbeseiten.de oder angepasste Selektoren
+- **Schritte:** Suche starten -> Leads pruefen -> CSV/XLSX mit `tag`, `category`, `sourceName` und `listId` testen
+- **Erwartetes Ergebnis:** reale Scraper-Ergebnisse und Exporte stimmen mit UI-Filtern und Meta-Infos ueberein
 
-### [P3] Unit Tests fuer Normalizer und Deduplicator
+### [P3] Unit Tests fuer Normalizer, Deduplicator und Export-Builder
 - **Status:** TODO
-- **Dateien:** `lib/parser/normalize.ts`, `lib/scraper/deduplicator.ts`
+- **Dateien:** `lib/parser/normalize.ts`, `lib/scraper/deduplicator.ts`, `lib/export/leadExport.ts`
 - **Erwartetes Ergebnis:** Zuverlaessige Tests fuer Randfaelle
 
 ### [P3] Suchhistorie / Job-Uebersicht als eigene Seite

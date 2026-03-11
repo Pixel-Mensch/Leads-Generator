@@ -16,6 +16,7 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - API-Validierung mit Zod und `.safeParse()`
 - Alle DB-Zugriffe ueber `lib/db.ts`
 - Scraper-Quellen in `lib/scraper/sources/`, Orchestrierung in `lib/scraper/orchestrator.ts`
+- Export-Aufbereitung zentral in `lib/export/leadExport.ts`; CSV/XLSX sollen dieselben Felder und Metadaten verwenden
 
 ## Auth und Ownership
 - next-auth v5 beta mit JWT-Strategie
@@ -57,3 +58,4 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - Vor Commit `npm run db:generate && npm run build && npm run lint` ausfuehren
 - Fuer Release-Kandidaten zusaetzlich Live-Migration und manuellen Smoke-Test ausfuehren
 - Fehlende Tests in PROJECT_STATE.md dokumentieren
+- Fuer Scraper-/Export-Aenderungen nach Moeglichkeit mindestens `db:generate`, `lint`, `build` plus einen kleinen Live-/HTML-Check dokumentieren

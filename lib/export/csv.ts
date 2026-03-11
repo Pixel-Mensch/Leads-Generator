@@ -1,68 +1,68 @@
 import { stringify } from "csv-stringify/sync";
 import type { Lead } from "@prisma/client";
-import { getConfidenceTier } from "@/lib/parser/normalize";
+import {
+  buildLeadExportView,
+  type ExportMeta,
+  summarizeLeadsForExport,
+} from "./leadExport";
 
-/**
- * Export column definitions for CSV.
- * Order determines column position in the output file.
- */
-const COLUMNS: Array<{ key: string; header: string }> = [
-  { key: "companyName",    header: "Firmenname" },
-  { key: "website",        header: "Website" },
-  { key: "email",          header: "E-Mail" },
-  { key: "phone",          header: "Telefon" },
-  { key: "address",        header: "Adresse" },
-  { key: "city",           header: "Ort" },
-  { key: "category",       header: "Branche/Kategorie" },
-  { key: "sourceName",     header: "Quelle" },
-  { key: "confidenceTier", header: "Qualitaet" },         // HIGH / MEDIUM / LOW
-  { key: "confidence",     header: "Confidence Score" },  // numeric 0.00–1.00
-  { key: "status",         header: "Status" },
-  { key: "notes",          header: "Notizen" },
-  { key: "sourceUrl",      header: "Quelle URL" },
-  { key: "createdAt",      header: "Gefunden am" },
+const COLUMNS: Array<{ key: keyof ReturnType<typeof buildLeadExportView>; header: string }> = [
+  { key: "companyName", header: "Firmenname" },
+  { key: "website", header: "Website" },
+  { key: "email", header: "E-Mail" },
+  { key: "phone", header: "Telefon" },
+  { key: "address", header: "Adresse" },
+  { key: "city", header: "Ort" },
+  { key: "category", header: "Branche/Kategorie" },
+  { key: "sourceName", header: "Quelle" },
+  { key: "contactChannels", header: "Kontaktkanaele" },
+  { key: "confidenceTier", header: "Qualitaet" },
+  { key: "confidence", header: "Confidence Score" },
+  { key: "confidenceSignals", header: "Confidence Signale" },
+  { key: "confidenceWarnings", header: "Confidence Warnungen" },
+  { key: "status", header: "Status" },
+  { key: "notes", header: "Notizen" },
+  { key: "sourceUrl", header: "Quelle URL" },
+  { key: "createdAt", header: "Gefunden am" },
 ];
 
-export interface ExportMeta {
-  exportedAt?: Date;
-  jobId?: string;
-  projectId?: string;
-  statusFilter?: string;
-  totalLeads?: number;
+function formatBreakdown(values: Record<string, number>) {
+  const entries = Object.entries(values);
+  if (!entries.length) return "keine";
+  return entries
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, count]) => `${key}: ${count}`)
+    .join(", ");
 }
 
 export function leadsToCSV(leads: Lead[], meta?: ExportMeta): string {
   const rows: unknown[][] = [];
+  const summary = summarizeLeadsForExport(leads);
 
-  // Optional meta header block at top of file
   if (meta) {
     rows.push(["# Export", new Date(meta.exportedAt ?? new Date()).toISOString()]);
     if (meta.totalLeads !== undefined) rows.push(["# Leads gesamt", meta.totalLeads]);
-    if (meta.jobId)        rows.push(["# Job-ID", meta.jobId]);
-    if (meta.projectId)    rows.push(["# Projekt-ID", meta.projectId]);
+    if (meta.jobId) rows.push(["# Job-ID", meta.jobId]);
+    if (meta.projectId) rows.push(["# Projekt-ID", meta.projectId]);
+    if (meta.listId) rows.push(["# Listen-ID", meta.listId]);
     if (meta.statusFilter) rows.push(["# Status-Filter", meta.statusFilter]);
-    rows.push([]); // blank separator row before headers
+    if (meta.tagFilter) rows.push(["# Tag-Filter", meta.tagFilter]);
+    if (meta.categoryFilter) rows.push(["# Kategorie-Filter", meta.categoryFilter]);
+    if (meta.sourceFilter) rows.push(["# Quellen-Filter", meta.sourceFilter]);
+    rows.push(["# Quellen", formatBreakdown(summary.sourceBreakdown)]);
+    rows.push(["# Qualitaet", formatBreakdown(summary.tierBreakdown)]);
+    rows.push([]);
   }
 
-  // Column header row
-  rows.push(COLUMNS.map((c) => c.header));
+  rows.push(COLUMNS.map((column) => column.header));
 
-  // Data rows
   for (const lead of leads) {
-    const row = COLUMNS.map(({ key }) => {
-      if (key === "confidenceTier") {
-        return getConfidenceTier(lead.confidence);
-      }
-      const val = (lead as Record<string, unknown>)[key];
-      if (val instanceof Date) return val.toISOString().split("T")[0];
-      if (key === "confidence" && typeof val === "number") return val.toFixed(2);
-      return val ?? "";
-    });
-    rows.push(row);
+    const view = buildLeadExportView(lead);
+    rows.push(COLUMNS.map(({ key }) => view[key] ?? ""));
   }
 
   return stringify(rows, {
     quoted: true,
-    bom: true, // UTF-8 BOM for Excel compatibility
+    bom: true,
   });
 }

@@ -49,6 +49,7 @@ leads-scraper/
 |   |       `-- gelbeseiten.ts        # Gelbe Seiten
 |   |-- parser/normalize.ts           # Phone, URL, Email + Confidence
 |   `-- export/
+|       |-- leadExport.ts             # Export-View + Meta-Zusammenfassung
 |       |-- csv.ts                    # CSV Export
 |       `-- xlsx.ts                   # XLSX Export
 |-- prisma/
@@ -162,4 +163,6 @@ API-Schutz:
 - Kein RBAC-Framework: `UserRole` Enum reicht
 - Fire-and-forget Jobs bleiben ohne Queue-System
 - `SCRAPE_MAX_RESULTS` ist nur ein optionaler globaler Hard-Cap; das effektive Lead-Limit kommt aus dem Plan
+- Gelbe Seiten bleibt ein statischer HTML-Scraper mit Cheerio; Playwright ist installiert, aber bewusst noch nicht im aktiven Pfad, solange die relevanten Daten statisch in HTML / `data-*`-Feldern vorliegen
+- Exporte sind absichtlich nachvollziehbar statt minimal: Kontaktkanaele, Confidence-Signale/-Warnungen und Filter-Metadaten werden fuer CSV und XLSX mit ausgegeben
 - Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und manueller Smoke-Test

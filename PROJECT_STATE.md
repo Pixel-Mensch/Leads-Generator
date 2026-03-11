@@ -6,7 +6,7 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Stabilisierung + SaaS-Haertung)
+## Aktueller Stand (2026-03-11, Stabilisierung + SaaS-Haertung + Scraper-Qualitaet)
 
 **Der technische Unterbau auf `dev` ist lokal glaubwuerdig und die SaaS-Grundschutzpfade sind gehaertet. `main` bleibt trotzdem blockiert, bis DB-Migration und echter Auth/Search/Export-Smoke-Test gegen eine laufende Postgres-Instanz erfolgt sind.**
 
@@ -28,6 +28,9 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - `normalizeUrl()` behandelt Schemes, Tracking-Parameter und Nicht-HTTP-Links jetzt sauberer
 - Dedup-Merge fuellt nicht nur Luecken, sondern behaelt reichere Kontaktfelder und kombiniert Quellen nachvollziehbar
 - Overpass-Fallback escaped Freitext sauberer und DB-Dedup gegen vorhandene Leads nutzt jetzt normalisierte Name+Ort-Keys
+- Gelbe-Seiten-Parsing wurde gegen reales Live-HTML validiert und nutzt jetzt eingebettete Kontaktdaten, Base64-Website-Links und robustere Detail-URL-/Adress-Selektoren
+- CSV- und XLSX-Exporte ziehen jetzt `listId`, `tag`, `category` und `sourceName` als Filter sauber durch
+- Exporte enthalten jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer nachvollziehbarere Lead-Qualitaet
 
 ## Tech Stack
 
@@ -70,13 +73,13 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | NavUser (Plan-Badge, Sign-out) | fertig |
 | Suchmaske mit Projekt-Auswahl | fertig, mit Usage-Hinweisen |
 | Overpass Scraper | fertig |
-| Gelbe Seiten Scraper | fertig, Live-HTML noch heuristisch |
+| Gelbe Seiten Scraper | verbessert, gegen Live-HTML validiert |
 | Normalisierung (Phone/URL/Email/Domain) | verbessert |
 | Confidence Scoring (transparent, mit Signalen) | verbessert |
 | Deduplizierung (Merge-Logik, stadtbasiert) | verbessert |
 | sourceName Tracking (DB + Exporte) | fertig |
-| CSV Export (Quelle, Qualitaet, Metadaten) | verbessert |
-| XLSX Export (Hyperlinks, Farben, Meta-Sheet) | verbessert |
+| CSV Export (Quelle, Filter, Qualitaet, Metadaten) | verbessert |
+| XLSX Export (Hyperlinks, Filter, Farben, Meta-Sheet) | verbessert |
 | Tags auf Leads (DB + API + UI) | fertig |
 | Follow-up Datum (DB + API + UI) | fertig |
 | KPI-Bar Dashboard (Zaehler pro Status) | fertig |
@@ -94,9 +97,9 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - **Migration nicht live angewendet** - Initial-Migration ist erzeugt, aber `npm run db:migrate` wurde in dieser Session nicht gegen eine laufende DB ausgefuehrt
 - **Kein End-to-End-Smoke-Test** - Register/Login/Projekt/Suche/Export wurden noch nicht als kompletter Flow durchgetestet
 - **Keine Test-Suite** - keine Unit- oder Integration-Tests vorhanden
-- **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es
-- **Gelbe Seiten Selektoren heuristisch** - koennen brechen
-- **Keine automatisierten Parser-/Dedup-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
+- **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
+- **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
+- **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code

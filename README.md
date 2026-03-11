@@ -20,7 +20,7 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - Overpass- und Gelbe-Seiten-Scraper
 - Lead-Workflow mit Status, Tags, Follow-up und Notizen
 - KPI-Bar, Sortierung, Filter und Bulk-Status-Update
-- CSV- und XLSX-Export
+- CSV- und XLSX-Export mit Filter-Metadaten und Confidence-Transparenz
 
 ## SaaS-Schutzpfade
 
@@ -142,5 +142,5 @@ Zusaetzlich erforderlich:
 
 - Keine automatisierten Tests
 - Keine verifizierte End-to-End-Suche in dieser Session
-- Gelbe-Seiten-Selektoren sind weiterhin heuristisch
+- Gelbe-Seiten-Selektoren wurden gegen Live-HTML validiert, bleiben aber extern aenderungsanfaellig
 - Kein CI/CD-Setup

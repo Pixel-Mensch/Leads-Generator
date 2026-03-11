@@ -28,6 +28,9 @@
 - URL-, Firmennamen- und Vergleichsnormalisierung wurden fuer reale Konfliktfaelle gehaertet
 - Dedup-Merge behaelt reichere Kontaktfelder, kombiniert Quellen nachvollziehbar und aktualisiert Schluessel nach Merges korrekt
 - Overpass-Freitext-Fallback escaped Regex sauberer, und DB-Dedup nutzt jetzt normalisierte Name+Ort-Keys
+- Gelbe-Seiten-Scraper wurde gegen reales Live-HTML validiert und liest jetzt Base64-Website-Links, eingebettete JSON-Kontaktdaten, robustere Detail-URLs und kompakte Adressbloecke
+- CSV- und XLSX-Exporte uebernehmen jetzt `listId`, `tag`, `category` und `sourceName` konsistent als Filter
+- Exporte zeigen jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer bessere Nachvollziehbarkeit
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -49,6 +52,7 @@
 - Dev-Boot-Test -> `GET /login` lieferte `HTTP 200`
 - Protected-Route-Test -> `GET /projects` lieferte `307 -> /login?...`
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
+- Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
 
 ### Nicht erfolgreich bzw. noch offen
 
@@ -99,6 +103,8 @@
 | `prisma/migrations/20260311081500_init/migration.sql` | Initiale Datenbankmigration |
 | `docker-compose.yml` | lokaler Postgres-Start |
 | `README.md` | aktueller Start- und Verifikationspfad |
+| `lib/scraper/sources/gelbeseiten.ts` | live-validierte Gelbe-Seiten-Heuristiken |
+| `lib/export/leadExport.ts` | Export-View, Kontaktkanaele und Confidence-Transparenz |
 
 ---
 
