@@ -9,6 +9,10 @@ const RegisterSchema = z.object({
   name: z.string().min(1).max(80).optional(),
 });
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -18,8 +22,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, password, name } = parsed.data;
+    const normalizedEmail = normalizeEmail(email);
 
-    const existing = await db.user.findUnique({ where: { email } });
+    const existing = await db.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (existing) {
       return NextResponse.json(
         { error: "E-Mail bereits registriert" },
@@ -28,19 +35,25 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await db.user.create({
-      data: { email, name: name ?? null, passwordHash },
-      select: { id: true, email: true, name: true, plan: true, role: true },
-    });
+    const user = await db.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: { email: normalizedEmail, name: name ?? null, passwordHash },
+        select: { id: true, email: true, name: true, plan: true, role: true },
+      });
 
-    // Auto-create a default project for new users
-    await db.project.create({
-      data: { name: "Mein erstes Projekt", userId: user.id },
+      await tx.project.create({
+        data: { name: "Mein erstes Projekt", userId: createdUser.id },
+      });
+
+      return createdUser;
     });
 
     return NextResponse.json(user, { status: 201 });
   } catch (err) {
     console.error("[POST /api/register]", err);
-    return NextResponse.json({ error: "Registrierung fehlgeschlagen" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Registrierung fehlgeschlagen" },
+      { status: 500 }
+    );
   }
 }

@@ -9,7 +9,7 @@ const CreateProjectSchema = z.object({
   description: z.string().max(300).optional(),
 });
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const { session, error } = await requireAuth();
   if (error) return error;
 

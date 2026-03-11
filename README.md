@@ -1,86 +1,302 @@
-# Leads Scraper
+# Leads Generator
 
-Ein Tool zum automatisierten Sammeln und Aufbereiten von Business-Leads.
+B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CRM-artigem Lead-Workflow und CSV/XLSX-Export.
 
-> Dieses Projekt befindet sich im Aufbau. README wird laufend aktualisiert.
+Repository-Name: `Leads-Scraper`
 
----
+## Release-Einschaetzung (2026-03-11)
 
-## Was macht das Tool?
+- `dev` ist aktuell demo-tauglich, screenshot-faehig und lokal verifiziert
+- `main` wurde in dieser Session kontrolliert auf denselben Release-Stand aktualisiert
+- Der Stand ist fuer erste Demo und lokale Veroeffentlichung glaubwuerdig, mit ehrlichen Restrisiken bei CI, Testbreite und externen Scraper-Quellen
+- Overpass und Gelbe Seiten wurden beide live gegen laufende lokale Dienste verifiziert
 
-<!-- TODO: Kurzbeschreibung der Datenquellen und des Outputs ergänzen -->
+## Aktueller Verifikationsstand
 
-- Scrapet Lead-Daten aus definierten Quellen
-- Normalisiert und dedupliziert die Daten
-- Exportiert das Ergebnis als CSV / JSON / Datenbank
+- `docker compose up db -d` laeuft lokal; der `db`-Container ist healthy auf `localhost:5432`
+- `npm run db:generate` laeuft
+- `npm run db:migrate` laeuft gegen die lokale Docker-Postgres-Instanz
+- `npm run db:migrate:status` meldet `Database schema is up to date`
+- `npm run lint` laeuft
+- `npm run build` laeuft
+- `git status --short` war vor der Promotion leer
+- `npm run test:e2e:core` wurde auf dem aktuellen `dev`-Worktree erneut erfolgreich ausgefuehrt
+- Dev-Server-Boot wurde lokal geprueft: `GET /login -> HTTP 200`
+- Protected-Route-Redirect wurde lokal geprueft: `GET /projects -> 307 /login?...`
+- Auth-Flow wurde lokal geprueft: `POST /api/register`, Auth.js Credentials-Login, `GET /api/me`, `GET /api/projects`
+- Kernflow wurde lokal geprueft: authentifizierte Seiten `GET / -> 200`, `GET /projects -> 200`, `GET /search -> 200`
+- Vollstaendiger Browser-E2E-Kernflow wurde lokal geprueft: Register -> Login -> Projekt anlegen -> Suche starten -> Leads anzeigen -> Lead-Detail -> Statuswechsel -> CSV/XLSX Export
+- Overpass-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 50 Leads
+- Gelbe-Seiten-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 46 Leads
+- CSV- und XLSX-Export wurden lokal geprueft: beide Routen antworteten mit `HTTP 200` gegen echte Lead-Daten
+- CSV- und XLSX-Export wurden zusaetzlich gegen den frischen Gelbe-Seiten-Job real heruntergeladen
+- Reproduzierbarer Playwright-Smoke-Test fuer den Kernworkflow ist vorhanden und lief lokal gruen
+- `docker compose config` ist valide
+- Eine Initial-Migration liegt in `prisma/migrations/20260311081500_init`
+- Zentrale Formulare im Kernflow wurden fuer echte Browser- und Accessibility-Nutzung nachgeschaerft: Labels sind jetzt programmatisch mit Inputs verknuepft
+- Overpass retryt jetzt transiente `504`-/Timeout-Fehler, um Demo- und Smoke-Flakes zu reduzieren
 
----
+## Funktionsumfang
 
-## Voraussetzungen
+- next-auth Credentials Login mit JWT-Strategie
+- User, Projects, LeadLists, SearchJobs und Leads in PostgreSQL
+- Overpass- und Gelbe-Seiten-Scraper
+- Lead-Workflow mit Status, Tags, Follow-up und Notizen
+- KPI-Bar, Sortierung, Filter und Bulk-Status-Update
+- CSV- und XLSX-Export mit Filter-Metadaten und Confidence-Transparenz
 
-<!-- TODO: Ergänzen sobald Tech-Stack feststeht -->
+## SaaS-Schutzpfade
 
-- [ ] Runtime (z. B. Python 3.11+ oder Node.js 20+)
-- [ ] Abhängigkeiten (siehe `requirements.txt` / `package.json`)
-- [ ] `.env` Datei mit API-Keys / Konfiguration (siehe `.env.example`)
+- Geschuetzte App-Seiten werden in `proxy.ts` auf `/login` umgeleitet
+- API-Routen pruefen Auth immer explizit mit `requireAuth()`
+- Ownership folgt der Kette `User -> Project -> (LeadList, SearchJob) -> Lead`
+- Lead-Listen duerfen nur im eigenen Projekt angelegt und zugewiesen werden
+- Plan-Limits werden serverseitig fuer Jobs, Projekte, Listen und Leads pro Job erzwungen
 
----
+### Plan-Limits
 
-## Setup
+| Plan | Jobs / Monat | Leads / Job | Projekte | Listen |
+|------|---------------|-------------|----------|--------|
+| FREE | 10 | 50 | 2 | 5 |
+| PRO | 200 | 200 | 20 | 100 |
+| ENTERPRISE | unendlich | 500 | unendlich | unendlich |
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- TypeScript 5
+- Prisma 7
+- `@prisma/adapter-pg` + `pg`
+- PostgreSQL 16
+- next-auth v5 beta
+- Tailwind CSS 4
+- Zod 4
+
+## Lokales Setup
+
+### 1. Abhaengigkeiten installieren
 
 ```bash
-# Repository klonen
-git clone <repo-url>
-cd Leads-Scraper
+npm install
+```
 
-# Abhängigkeiten installieren
-# pip install -r requirements.txt
-# oder: npm install
+### 2. Umgebungsvariablen anlegen
 
-# Umgebungsvariablen setzen
+```bash
 cp .env.example .env
-# .env mit echten Werten befüllen
 ```
 
----
+### Lokale Konfiguration
 
-## Benutzung
+Pflichtwerte fuer den lokalen Start:
+
+- `DATABASE_URL`: Prisma- und App-DB-Verbindung. Der Default in `.env.example` passt zur lokalen Docker-DB.
+- `AUTH_SECRET`: fuer Auth.js JWT-/Cookie-Signing. Erzeuge lokal einen eigenen Wert.
+- `AUTH_URL`: lokal normalerweise `http://localhost:3000`
+
+Nur fuer `docker compose up db -d` relevant:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+
+Optional:
+
+- `SCRAPE_DELAY_MS`: Wartezeit zwischen Requests
+- `SCRAPE_MAX_RESULTS`: globaler Hard-Cap fuer Leads pro Job
+
+Secret lokal erzeugen:
 
 ```bash
-# TODO: Startbefehl ergänzen
-# python main.py --source <quelle> --output leads.csv
+openssl rand -base64 32
 ```
 
----
+Oder ohne OpenSSL:
 
-## Output-Format
-
-<!-- TODO: Felder des Lead-Datensatzes dokumentieren -->
-
-| Feld | Beschreibung |
-|------|-------------|
-| `name` | Name des Unternehmens / Ansprechpartners |
-| `email` | Kontakt-E-Mail |
-| `phone` | Telefonnummer |
-| `website` | Website-URL |
-| `source` | Herkunft des Datensatzes |
-
----
-
-## Projektstruktur
-
-```
-Leads-Scraper/
-├── src/            # Quellcode (Scraper, Parser, Storage)
-├── tests/          # Tests
-├── .env.example    # Vorlage für Umgebungsvariablen
-├── .gitignore
-└── README.md
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
----
+### 3. PostgreSQL starten
 
-## Hinweise
+```bash
+docker compose up db -d
+```
 
-- Nur für Quellen verwenden, bei denen Scraping rechtlich zulässig ist.
-- Keine Credentials oder API-Keys committen — immer `.env` verwenden.
+Wenn Docker Desktop nicht laeuft, scheitert dieser Schritt mit einem Engine-/Pipe-Fehler. In dem Fall zuerst Docker Desktop starten.
+
+### 4. Prisma Client generieren
+
+```bash
+npm run db:generate
+```
+
+### 5. Migration anwenden
+
+```bash
+npm run db:migrate
+```
+
+Optionaler Status-Check:
+
+```bash
+npm run db:migrate:status
+```
+
+### 6. Entwicklungsserver starten
+
+```bash
+npm run dev
+```
+
+Danach ist die App lokal unter `http://localhost:3000` erreichbar.
+
+### Minimaler verifizierter Startpfad
+
+```bash
+npm install
+cp .env.example .env
+docker compose up db -d
+npm run db:generate
+npm run db:migrate
+npm run dev
+```
+
+Erwartetes Ergebnis:
+
+- `/login` und `/register` laden
+- `/projects` leitet unangemeldet auf `/login` um
+- Registrierung und Login funktionieren
+- `/projects` kann ein Projekt anlegen
+- `/search` startet einen Suchlauf
+- Leads erscheinen im Dashboard und in der Detailseite
+- Statusfilter und Exporte sind nutzbar
+
+## Externe Schnittstellen
+
+Aktuell direkt verwendet:
+
+- PostgreSQL lokal oder in Docker ueber `DATABASE_URL`
+- Overpass API: `https://overpass-api.de/api/interpreter`
+- Nominatim: `https://nominatim.openstreetmap.org/search`
+- Gelbe Seiten: `https://www.gelbeseiten.de`
+
+Aktuell nicht noetig:
+
+- keine OAuth-Provider
+- keine SMTP- oder Mail-API
+- keine Stripe-Keys fuer den lokalen Start
+- keine API-Keys fuer Overpass, Nominatim oder Gelbe Seiten
+
+## Wichtige Skripte
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run test:e2e:core
+npm run db:generate
+npm run db:migrate
+npm run db:migrate:deploy
+npm run db:migrate:status
+```
+
+## Browser-Smoke-Test
+
+Ein schlanker Playwright-Test deckt den Kernworkflow ab:
+
+```bash
+npx playwright install chromium
+npm run test:e2e:core
+```
+
+Voraussetzungen:
+
+- Docker-DB laeuft
+- `.env` ist gesetzt
+
+Hinweis:
+
+- `npm run test:e2e:core` startet die lokale App ueber Playwright `webServer` selbst auf `http://localhost:3000`
+
+Der Test deckt ab:
+
+- Register
+- Login
+- Projektanlage
+- Overpass-Suche
+- Lead-Detailseite
+- Statuswechsel auf `CONTACTED`
+- gefilterten CSV-Export
+- gefilterten XLSX-Export
+
+## Demo-Ablauf
+
+Ein kurzer lokaler Ablauf fuer Demo, Screenshots oder Verkaufsgespraech:
+
+1. `docker compose up db -d`
+2. `npm run db:generate`
+3. `npm run db:migrate`
+4. `npm run dev`
+5. Im Browser: registrieren, Projekt anlegen, Suche starten, Status im Dashboard setzen, Lead-Detail aufrufen, CSV/XLSX exportieren
+
+Empfohlener Demo-Pfad:
+
+- Overpass fuer einen schnellen, ToS-konformen Standardlauf
+- Gelbe Seiten als zweiter Quellennachweis, wenn der Demo-Fokus auf deutschen Branchenverzeichnissen liegt
+- Dashboard-Filter und Export nur mit sichtbaren Leads demonstrieren; leere Exporte werden bewusst deaktiviert
+
+## Release-Check
+
+Vor einer Promotion nach `main` muessen mindestens diese Befehle gruen sein:
+
+```bash
+npm run db:generate
+npm run lint
+npm run build
+```
+
+Zusaetzlich erforderlich:
+
+- Postgres starten
+- `npm run db:migrate` erfolgreich ausfuehren
+- Smoke-Test fuer Register, Login, Projekt, Suche und Export
+- Bei Scraper-Aenderungen mindestens einen Live-Job pro angefasster Quelle pruefen
+- `git status --short` muss vor der Promotion leer sein
+
+Der aktuelle `main`-Stand erfuellt diese Bedingungen fuer den am 2026-03-11 verifizierten Release-Commit.
+
+## Smoke-Test-Checkliste
+
+1. `/register` aufrufen und einen User anlegen
+2. `/login` nutzen und anmelden
+3. `/projects` ein Projekt anlegen
+4. `/search` eine Suche gegen Overpass starten
+5. Dashboard pruefen: KPI-Bar, Sortierung, Filter, Bulk-Status
+6. Lead-Detailseite pruefen: Tags, Follow-up, Notizen
+7. CSV- und XLSX-Export aus dem Dashboard pruefen
+8. Unangemeldet `/projects` oder `/search` aufrufen und Redirect auf `/login` pruefen
+
+## Troubleshooting
+
+- Fehlendes `AUTH_SECRET`: Auth.js startet dann nicht sauber. Wert in `.env` setzen und Dev-Server neu starten.
+- Fehlende `DATABASE_URL`: Prisma und API-Routen schlagen beim ersten DB-Zugriff fehl. `.env.example` als Basis verwenden.
+- Datenbank nicht erreichbar: `docker compose ps` pruefen. Der `db`-Container muss healthy sein und `localhost:5432` offen haben.
+- Prisma Client nicht generiert: `npm run db:generate` ausfuehren.
+- Migration nicht angewendet: `npm run db:migrate` und danach optional `npm run db:migrate:status`.
+- Playwright-Browser fehlt: `npx playwright install chromium` ausfuehren.
+- Playwright-Smoke startet nicht: pruefen, ob `docker compose up db -d` laeuft; die App wird vom Test selbst gestartet, die DB nicht.
+
+## Docker
+
+- `docker-compose.yml` startet `db` und `app`
+- Das Compose-File ist syntaktisch validiert
+- Der reale lokale DB-Start wurde in dieser Session erfolgreich mit `docker compose up db -d` verifiziert
+
+## Bekannte Luecken
+
+- Keine breite Test-Suite; aktuell nur ein schlanker Playwright-Kernworkflow-Smoke-Test
+- Overpass ist trotz Retry weiterhin von einer externen API mit gelegentlichen `504`-/Timeout-Flakes abhaengig
+- Gelbe-Seiten-Selektoren wurden gegen Live-HTML validiert, bleiben aber extern aenderungsanfaellig
+- Kein CI/CD-Setup

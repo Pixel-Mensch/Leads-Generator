@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatSourceToken } from "@/lib/sourceLabels";
 
 type Job = {
   id: string;
   query: string;
   location: string;
+  source: string;
   status: string;
   totalFound: number;
   error: string | null;
@@ -13,15 +15,15 @@ type Job = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  PENDING: "text-yellow-700 bg-yellow-50 border-yellow-200",
-  RUNNING: "text-blue-700 bg-blue-50 border-blue-200",
-  COMPLETED: "text-green-700 bg-green-50 border-green-200",
-  FAILED: "text-red-700 bg-red-50 border-red-200",
+  PENDING: "border-amber-200 bg-amber-50 text-amber-700",
+  RUNNING: "border-blue-200 bg-blue-50 text-blue-700",
+  COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  FAILED: "border-red-200 bg-red-50 text-red-700",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Wartend",
-  RUNNING: "Läuft…",
+  RUNNING: "Laeuft",
   COMPLETED: "Abgeschlossen",
   FAILED: "Fehlgeschlagen",
 };
@@ -30,38 +32,78 @@ export default function JobStatus({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    async function fetch_() {
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    async function loadJob() {
       const res = await fetch(`/api/jobs/${jobId}`);
-      if (res.ok && mounted) setJob(await res.json());
+      if (!res.ok || cancelled) return;
+
+      const nextJob = (await res.json()) as Job;
+      if (cancelled) return;
+
+      setJob(nextJob);
+
+      if (
+        intervalId &&
+        (nextJob.status === "COMPLETED" || nextJob.status === "FAILED")
+      ) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
     }
-    fetch_();
-    return () => { mounted = false; };
+
+    void loadJob();
+    intervalId = setInterval(() => {
+      void loadJob();
+    }, 4000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [jobId]);
 
   if (!job) return null;
 
-  const colorClass = STATUS_COLOR[job.status] ?? "text-gray-700 bg-gray-50 border-gray-200";
+  const colorClass =
+    STATUS_COLOR[job.status] ?? "border-slate-200 bg-slate-50 text-slate-700";
 
   return (
-    <div className={`border rounded-lg px-4 py-3 mb-4 text-sm ${colorClass}`}>
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className={`rounded-2xl border px-4 py-4 text-sm shadow-sm ${colorClass}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <span className="font-medium">{job.query}</span>
-          <span className="mx-1 text-current/60">in</span>
-          <span className="font-medium">{job.location}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold">
+              {job.query} in {job.location}
+            </span>
+            <span className="rounded-full border border-current/15 bg-white/60 px-2 py-0.5 text-xs">
+              {formatSourceToken(job.source) ?? job.source}
+            </span>
+          </div>
+          {job.status === "RUNNING" && (
+            <p className="mt-1 text-xs text-current/80">
+              Der Suchlauf verarbeitet gerade Treffer. Neue Leads erscheinen automatisch im Dashboard.
+            </p>
+          )}
+          {job.status === "PENDING" && (
+            <p className="mt-1 text-xs text-current/80">
+              Der Job ist angelegt und wartet auf die Ausfuehrung.
+            </p>
+          )}
+          {job.status === "COMPLETED" && (
+            <p className="mt-1 text-xs text-current/80">
+              {job.totalFound} Treffer gefunden, {job._count.leads} Leads gespeichert.
+            </p>
+          )}
+          {job.status === "FAILED" && job.error && (
+            <p className="mt-1 text-xs text-current/80">Fehler: {job.error}</p>
+          )}
         </div>
-        <span className="font-medium">{STATUS_LABEL[job.status] ?? job.status}</span>
+        <span className="rounded-full border border-current/15 bg-white/60 px-3 py-1 text-xs font-semibold">
+          {STATUS_LABEL[job.status] ?? job.status}
+        </span>
       </div>
-      {job.status === "RUNNING" && (
-        <p className="mt-1 text-xs">Scraping läuft — Seite aktualisiert sich automatisch…</p>
-      )}
-      {job.status === "COMPLETED" && (
-        <p className="mt-1 text-xs">{job.totalFound} Treffer gefunden, {job._count.leads} Leads gespeichert.</p>
-      )}
-      {job.status === "FAILED" && job.error && (
-        <p className="mt-1 text-xs">Fehler: {job.error}</p>
-      )}
     </div>
   );
 }

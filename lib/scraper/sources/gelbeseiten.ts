@@ -1,23 +1,82 @@
 /**
  * Gelbe Seiten scraper (gelbeseiten.de)
- * Public business directory — Germany. Respectful rate-limited scraping.
- * Only reads publicly visible business listings.
+ * Public business directory, Germany. Respectful and read-only.
  */
 
 import * as cheerio from "cheerio";
 import {
+  computeConfidence,
+  normalizeEmail,
   normalizePhone,
   normalizeUrl,
-  normalizeEmail,
-  computeConfidence,
 } from "@/lib/parser/normalize";
 import type { RawLead } from "./overpass";
 
 const BASE_URL = "https://www.gelbeseiten.de";
-const DELAY_MS = parseInt(process.env.SCRAPE_DELAY_MS ?? "2000", 10);
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+type EmbeddedContact = {
+  email: string | null;
+  phone: string | null;
+  street: string | null;
+  city: string | null;
+  companyName: string | null;
+};
+
+function cleanText(value: string | null | undefined) {
+  if (!value) return null;
+  const cleaned = value.replace(/\s+/g, " ").trim();
+  return cleaned || null;
+}
+
+function decodeBase64Value(value: string | null | undefined) {
+  if (!value) return null;
+
+  try {
+    const decoded = Buffer.from(value, "base64").toString("utf8").trim();
+    return decoded || null;
+  } catch {
+    return null;
+  }
+}
+
+function absolutizeUrl(value: string | null | undefined) {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return value.startsWith("/") ? `${BASE_URL}${value}` : `${BASE_URL}/${value}`;
+}
+
+function parseEmbeddedContact(value: string | null | undefined): EmbeddedContact {
+  if (!value) {
+    return {
+      email: null,
+      phone: null,
+      street: null,
+      city: null,
+      companyName: null,
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    const generic = parsed?.organizationQuery?.generic ?? {};
+    const phones = Array.isArray(generic.phones) ? generic.phones : [];
+
+    return {
+      email: cleanText(generic.email),
+      phone: cleanText(phones[0]),
+      street: cleanText(generic.street),
+      city: cleanText(generic.city),
+      companyName: cleanText(generic.name),
+    };
+  } catch {
+    return {
+      email: null,
+      phone: null,
+      street: null,
+      city: null,
+      companyName: null,
+    };
+  }
 }
 
 async function fetchPage(url: string): Promise<string | null> {
@@ -41,81 +100,94 @@ async function fetchPage(url: string): Promise<string | null> {
 export async function scrapeGelbeSeiten(
   query: string,
   location: string,
-  maxResults: number = 30
+  maxResults = 30
 ): Promise<RawLead[]> {
   const leads: RawLead[] = [];
   const searchUrl = `${BASE_URL}/suche/${encodeURIComponent(query)}/${encodeURIComponent(location)}`;
-
   const html = await fetchPage(searchUrl);
   if (!html) return leads;
 
   const $ = cheerio.load(html);
+  const articles = $("#teilnehmer_block article.mod-Treffer, article[data-teilnehmerid]").toArray();
 
-  // Each listing article
-  const articles = $("article[data-wle-id], [class*='teilnehmer']").toArray();
-
-  for (const el of articles.slice(0, maxResults)) {
+  for (const element of articles.slice(0, maxResults)) {
     if (leads.length >= maxResults) break;
 
-    const $el = $(el);
+    const $el = $(element);
+    const embedded = parseEmbeddedContact(
+      $el.find("[data-parameters]").first().attr("data-parameters")
+    );
 
     const companyName =
-      $el.find("[class*='name'], h2, h3").first().text().trim() ||
-      $el.find("[itemprop='name']").first().text().trim();
+      cleanText($el.find("h2.mod-Treffer__name").first().text()) ??
+      cleanText($el.find("[class*='name'], h2, h3").first().text()) ??
+      embedded.companyName;
 
     if (!companyName) continue;
 
+    const detailUrl =
+      absolutizeUrl($el.find("a[href*='/gsbiz/']").first().attr("href")) ??
+      absolutizeUrl(
+        $el
+          .find(".mod-TelefonnummerKompakt__phoneNumber")
+          .first()
+          .attr("data-detailseiteurl")
+      ) ??
+      searchUrl;
+
     const rawPhone =
-      $el.find("[class*='phone'], [itemprop='telephone']").first().text().trim() ||
-      $el.find("[href^='tel:']").first().attr("href")?.replace("tel:", "") ||
-      null;
+      cleanText(
+        $el.find(".mod-TelefonnummerKompakt__phoneNumber").first().text()
+      ) ??
+      decodeBase64Value(
+        $el
+          .find(".mod-TelefonnummerKompakt__phoneNumber")
+          .first()
+          .attr("data-prg")
+      ) ??
+      embedded.phone;
 
     const rawWebsite =
-      $el.find("[class*='website'] a, [itemprop='url'] a").first().attr("href") ||
-      $el.find("a[href*='http']").not("[href*='gelbeseiten']").first().attr("href") ||
+      decodeBase64Value(
+        $el.find("[data-webseitelink]").first().attr("data-webseitelink")
+      ) ??
+      $el.find("a[href*='http']").not("[href*='gelbeseiten']").first().attr("href") ??
       null;
 
     const rawEmail =
-      $el.find("[href^='mailto:']").first().attr("href")?.replace("mailto:", "") ||
-      null;
+      cleanText(
+        $el.find("[href^='mailto:']").first().attr("href")?.replace(/^mailto:/i, "")
+      ) ?? embedded.email;
 
-    const addressParts: string[] = [];
-    const street = $el.find("[itemprop='streetAddress']").first().text().trim();
-    const postcode = $el.find("[itemprop='postalCode']").first().text().trim();
-    const city = $el.find("[itemprop='addressLocality']").first().text().trim() || location;
-    if (street) addressParts.push(street);
-    if (postcode) addressParts.push(postcode);
-    if (city) addressParts.push(city);
+    const addressNode = $el.find(".mod-AdresseKompakt__adress-text").first().clone();
+    addressNode.find(".mod-AdresseKompakt__entfernung").remove();
+    const addressText = cleanText(addressNode.text());
+    const city = embedded.city ?? location;
+    const address =
+      addressText ??
+      cleanText(
+        [embedded.street, embedded.city].filter(Boolean).join(", ")
+      );
 
     const category =
-      $el.find("[class*='category'], [class*='branche']").first().text().trim() || query;
-
-    const sourceUrl =
-      $el.find("a[href*='/firmen/']").first().attr("href") ||
-      $el.find("a").first().attr("href") ||
-      searchUrl;
+      cleanText($el.find(".mod-Treffer--besteBranche, [class*='branche']").first().text()) ??
+      query;
 
     const lead: RawLead = {
       companyName,
       website: normalizeUrl(rawWebsite),
       email: normalizeEmail(rawEmail),
       phone: normalizePhone(rawPhone),
-      address: addressParts.join(", ") || null,
-      city: city || location,
+      address,
+      city,
       category: category || null,
-      sourceUrl: sourceUrl?.startsWith("http")
-        ? sourceUrl
-        : sourceUrl
-        ? BASE_URL + sourceUrl
-        : searchUrl,
+      sourceUrl: detailUrl,
       sourceName: "gelbeseiten",
       confidence: 0,
     };
+
     lead.confidence = computeConfidence(lead).score;
     leads.push(lead);
-    // Note: sleep is only meaningful at HTTP request boundaries.
-    // This scraper currently fetches one page; delay here is a no-op.
-    // Re-enable if pagination / detail-page fetching is added.
   }
 
   return leads;

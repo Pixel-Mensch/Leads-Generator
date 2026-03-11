@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/session";
-import { getLimits, checkJobLimit, checkProjectLimit } from "@/lib/limits";
+import {
+  checkJobLimit,
+  checkLeadListLimit,
+  checkProjectLimit,
+  getEffectivePlan,
+  getLimits,
+  getRemainingCapacity,
+  serializeLimit,
+} from "@/lib/limits";
 
 export async function GET() {
   const { session, error } = await requireAuth();
@@ -18,24 +26,45 @@ export async function GET() {
         role: true,
         planExpiresAt: true,
         createdAt: true,
-        _count: { select: { projects: true, jobs: true } },
       },
     });
     if (!user) return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
 
-    const limits = getLimits(session.user.plan);
-    const [jobUsage, projectUsage] = await Promise.all([
+    const effectivePlan = getEffectivePlan(user.plan, user.planExpiresAt);
+    const limits = getLimits(user.plan, user.planExpiresAt);
+    const [jobUsage, projectUsage, listUsage] = await Promise.all([
       checkJobLimit(session.user.id, session.user.plan),
       checkProjectLimit(session.user.id, session.user.plan),
+      checkLeadListLimit(session.user.id, session.user.plan),
     ]);
 
     return NextResponse.json({
       ...user,
+      configuredPlan: user.plan,
+      plan: effectivePlan,
+      billing: {
+        configuredPlan: user.plan,
+        effectivePlan,
+        planExpiresAt: user.planExpiresAt,
+        hasExpiredPaidPlan:
+          user.plan !== "FREE" && effectivePlan !== user.plan,
+      },
       usage: {
         jobsThisMonth: jobUsage.used,
-        jobLimit: jobUsage.limit,
-        projects: projectUsage.used,
-        projectLimit: projectUsage.limit,
+        jobLimit: serializeLimit(jobUsage.limit),
+        jobsRemaining: getRemainingCapacity(jobUsage.used, jobUsage.limit),
+        activeProjects: projectUsage.used,
+        projectLimit: serializeLimit(projectUsage.limit),
+        projectSlotsRemaining: getRemainingCapacity(
+          projectUsage.used,
+          projectUsage.limit
+        ),
+        leadLists: listUsage.used,
+        listLimit: serializeLimit(listUsage.limit),
+        listSlotsRemaining: getRemainingCapacity(
+          listUsage.used,
+          listUsage.limit
+        ),
         leadsPerJob: limits.leadsPerJob,
       },
     });
