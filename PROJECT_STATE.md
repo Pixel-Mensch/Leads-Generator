@@ -94,6 +94,6 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 ## Risiken
 
 - next-auth v5 beta kann noch API-Aenderungen haben
-- Prisma 7 + Adapter-Pfad ist build-verifiziert, aber sollte nach echter DB-Migration noch einmal unter Last geprüft werden
+- Prisma 7 + Adapter-Pfad ist build-verifiziert, aber sollte nach echter DB-Migration noch einmal unter Last geprueft werden
 - Es gibt weiterhin keine CI-Absicherung
 - `main` ist noch nicht release-faehig, solange DB-Migration und Smoke-Test fehlen
