@@ -24,6 +24,7 @@ export interface RawLead {
 }
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
+const OVERPASS_MAX_ATTEMPTS = 3;
 
 function normalizeQueryToken(value: string) {
   return value
@@ -41,6 +42,54 @@ function normalizeQueryToken(value: string) {
 
 function escapeOverpassRegex(value: string) {
   return value.replace(/[\\"]/g, "\\$&");
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableOverpassError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+
+  if (
+    error.name === "TimeoutError" ||
+    error.message.includes("aborted due to timeout")
+  ) {
+    return true;
+  }
+
+  return /Overpass API Fehler: (429|5\d{2})/.test(error.message);
+}
+
+async function fetchOverpassData(overpassQuery: string) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= OVERPASS_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const res = await fetch(OVERPASS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(overpassQuery),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Overpass API Fehler: ${res.status}`);
+      }
+
+      return await res.json();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt >= OVERPASS_MAX_ATTEMPTS || !isRetryableOverpassError(error)) {
+        throw error;
+      }
+
+      await wait(attempt * 2000);
+    }
+  }
+
+  throw lastError;
 }
 
 async function geocodeLocation(location: string): Promise<{ lat: number; lon: number } | null> {
@@ -147,15 +196,7 @@ export async function scrapeOverpass(
 out center tags ${maxResults};
   `.trim();
 
-  const res = await fetch(OVERPASS_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "data=" + encodeURIComponent(overpassQuery),
-    signal: AbortSignal.timeout(30000),
-  });
-
-  if (!res.ok) throw new Error(`Overpass API Fehler: ${res.status}`);
-  const data = await res.json();
+  const data = await fetchOverpassData(overpassQuery);
 
   const leads: RawLead[] = [];
 

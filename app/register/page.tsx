@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,36 +15,52 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
 
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(
-        typeof data.error === "string"
-          ? data.error
-          : "Registrierung fehlgeschlagen."
-      );
-      setLoading(false);
-    } else {
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(
+          typeof data?.error === "string"
+            ? data.error
+            : "Registrierung fehlgeschlagen."
+        );
+        return;
+      }
+
       router.push("/login?registered=1");
+    } catch {
+      setError("Registrierung aktuell nicht moeglich. Bitte erneut versuchen.");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.12),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1 text-center">Leads Scraper</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">Konto erstellen</p>
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+            Leads Generator
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-gray-900">Konto erstellen</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Richte deinen Workspace fuer Projekte, Lead-Listen und Exporte ein.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 rounded-2xl border border-white/70 bg-white/90 p-6 shadow-sm backdrop-blur"
+        >
           <div>
             <label
               htmlFor="register-name"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
               Name (optional)
             </label>
@@ -53,14 +69,15 @@ export default function RegisterPage() {
               type="text"
               autoComplete="name"
               value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label
               htmlFor="register-email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
               E-Mail
             </label>
@@ -70,16 +87,17 @@ export default function RegisterPage() {
               required
               autoComplete="email"
               value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label
               htmlFor="register-password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Passwort <span className="text-gray-400 font-normal">(min. 8 Zeichen)</span>
+              Passwort <span className="font-normal text-gray-400">(min. 8 Zeichen)</span>
             </label>
             <input
               id="register-password"
@@ -88,13 +106,13 @@ export default function RegisterPage() {
               minLength={8}
               autoComplete="new-password"
               value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
             </p>
           )}
@@ -102,13 +120,13 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-lg py-2 text-sm transition-colors"
+            className="w-full rounded-lg bg-blue-600 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
           >
-            {loading ? "Registrieren…" : "Konto erstellen"}
+            {loading ? "Konto wird erstellt..." : "Konto erstellen"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="mt-4 text-center text-sm text-gray-500">
           Bereits registriert?{" "}
           <Link href="/login" className="text-blue-600 hover:underline">
             Anmelden

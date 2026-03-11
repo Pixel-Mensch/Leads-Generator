@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getConfidenceTier } from "@/lib/parser/normalize";
+import { formatSourceName, formatSourceToken } from "@/lib/sourceLabels";
 
 type Lead = {
   id: string;
@@ -40,9 +41,9 @@ const STATUS_OPTIONS = [
 ];
 
 const TIER_COLOR: Record<string, string> = {
-  HIGH: "text-emerald-700 bg-emerald-100",
-  MEDIUM: "text-amber-700 bg-amber-100",
-  LOW: "text-red-600 bg-red-100",
+  HIGH: "bg-emerald-100 text-emerald-700",
+  MEDIUM: "bg-amber-100 text-amber-700",
+  LOW: "bg-red-100 text-red-600",
 };
 
 function formatDate(value: string) {
@@ -66,8 +67,8 @@ function getFollowUpSummary(followUpAt: string | null) {
   return {
     label: `${isDue ? "Faellig" : "Geplant"}: ${formatDate(followUpAt)}`,
     className: isDue
-      ? "bg-orange-100 text-orange-700 border-orange-200"
-      : "bg-violet-100 text-violet-700 border-violet-200",
+      ? "border-orange-200 bg-orange-100 text-orange-700"
+      : "border-violet-200 bg-violet-100 text-violet-700",
   };
 }
 
@@ -182,10 +183,7 @@ export default function LeadDetailPage() {
 
   function removeTag(tag: string) {
     if (!lead) return;
-    void save(
-      { tags: lead.tags.filter((currentTag) => currentTag !== tag) },
-      "tags"
-    );
+    void save({ tags: lead.tags.filter((currentTag) => currentTag !== tag) }, "tags");
   }
 
   async function markContacted() {
@@ -207,22 +205,24 @@ export default function LeadDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto py-12 text-center text-sm text-gray-400">
-        Lade Lead...
+      <div className="mx-auto max-w-4xl space-y-4">
+        <div className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />
+          <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />
+        </div>
+        <div className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />
       </div>
     );
   }
 
   if (!lead || error) {
     return (
-      <div className="max-w-3xl mx-auto py-10 space-y-4">
+      <div className="mx-auto max-w-3xl space-y-4 py-10">
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error ?? "Lead nicht gefunden"}
         </div>
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-gray-600 hover:text-gray-900"
-        >
+        <button onClick={() => router.back()} className="text-sm text-slate-600 hover:text-slate-900">
           Zurueck
         </button>
       </div>
@@ -234,22 +234,20 @@ export default function LeadDetailPage() {
   const followUpSummary = getFollowUpSummary(lead.followUpAt);
   const quickActions = getQuickActions(lead);
   const hasDirectContact = Boolean(lead.phone || lead.email || lead.website);
+  const sourceLabel = formatSourceName(lead.sourceName);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
-      <div className="flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => router.back()} className="hover:text-gray-700">
+    <div className="mx-auto max-w-4xl space-y-4">
+      <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <button onClick={() => router.back()} className="hover:text-slate-700">
             &larr; Zurueck
           </button>
           <span>/</span>
-          <span className="text-gray-900 font-medium truncate">{lead.companyName}</span>
+          <span className="truncate font-medium text-slate-900">{lead.companyName}</span>
         </div>
         {lead.job && (
-          <Link
-            href={`/?jobId=${lead.job.id}`}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Link href={`/?jobId=${lead.job.id}`} className="text-sm text-blue-600 hover:text-blue-800">
             Zum Suchlauf
           </Link>
         )}
@@ -261,19 +259,23 @@ export default function LeadDetailPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 truncate">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+              Lead
+            </p>
+            <h1 className="mt-2 truncate text-3xl font-bold text-slate-900">
               {lead.companyName}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="mt-2 text-sm text-slate-500">
               {lead.city ?? "Ort unbekannt"}
-              {lead.category ? ` · ${lead.category}` : ""}
+              {lead.category ? ` | ${lead.category}` : ""}
             </p>
-            <div className="flex flex-wrap items-center gap-2 mt-3">
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <span
-                className={`text-xs font-semibold rounded-full px-2.5 py-0.5 ${TIER_COLOR[tier]}`}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TIER_COLOR[tier]}`}
               >
                 {tier === "HIGH"
                   ? "Hohe Qualitaet"
@@ -281,24 +283,32 @@ export default function LeadDetailPage() {
                     ? "Mittlere Qualitaet"
                     : "Niedrige Qualitaet"}
               </span>
+
               {lead.confidence !== null && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-slate-400">
                   Score: {Math.round(lead.confidence * 100)}%
                 </span>
               )}
-              {lead.sourceName && (
-                <span className="text-xs text-gray-500 border border-gray-200 rounded-full px-2 py-0.5">
-                  {lead.sourceName}
+
+              {sourceLabel && (
+                <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                  {sourceLabel}
                 </span>
               )}
-              <span className="text-xs text-gray-500 border border-gray-200 rounded-full px-2 py-0.5">
-                {hasDirectContact
-                  ? "Direkter Kontakt moeglich"
-                  : "Nur Quellenkontakt"}
+
+              {lead.job?.source && (
+                <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                  {formatSourceToken(lead.job.source) ?? lead.job.source}
+                </span>
+              )}
+
+              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                {hasDirectContact ? "Direkter Kontakt moeglich" : "Nur Quellenkontakt"}
               </span>
+
               {followUpSummary && (
                 <span
-                  className={`text-xs border rounded-full px-2 py-0.5 ${followUpSummary.className}`}
+                  className={`rounded-full border px-2 py-0.5 text-xs ${followUpSummary.className}`}
                 >
                   {followUpSummary.label}
                 </span>
@@ -307,15 +317,13 @@ export default function LeadDetailPage() {
           </div>
 
           <div className="flex flex-col items-start gap-1 sm:items-end">
-            <label className="text-xs text-gray-400 uppercase tracking-wide font-medium">
+            <label className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Status
             </label>
             <select
               value={lead.status}
-              onChange={(event) =>
-                void save({ status: event.target.value }, "status")
-              }
-              className={`text-sm rounded-full px-3 py-1.5 border-0 font-medium cursor-pointer ${
+              onChange={(event) => void save({ status: event.target.value }, "status")}
+              className={`cursor-pointer rounded-full border-0 px-3 py-1.5 text-sm font-medium ${
                 currentStatus?.color ?? "bg-gray-100 text-gray-700"
               }`}
             >
@@ -339,7 +347,7 @@ export default function LeadDetailPage() {
                   : "_blank"
               }
               rel="noopener noreferrer"
-              className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
             >
               {action.label}
             </a>
@@ -361,9 +369,9 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Kontakt
           </h2>
 
@@ -371,12 +379,9 @@ export default function LeadDetailPage() {
             <dl className="space-y-3 text-sm">
               {lead.phone && (
                 <div>
-                  <dt className="text-xs text-gray-400">Telefon</dt>
+                  <dt className="text-xs text-slate-400">Telefon</dt>
                   <dd>
-                    <a
-                      href={`tel:${lead.phone}`}
-                      className="text-blue-600 hover:underline"
-                    >
+                    <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline">
                       {lead.phone}
                     </a>
                   </dd>
@@ -384,11 +389,11 @@ export default function LeadDetailPage() {
               )}
               {lead.email && (
                 <div>
-                  <dt className="text-xs text-gray-400">E-Mail</dt>
+                  <dt className="text-xs text-slate-400">E-Mail</dt>
                   <dd>
                     <a
                       href={`mailto:${lead.email}`}
-                      className="text-blue-600 hover:underline break-all"
+                      className="break-all text-blue-600 hover:underline"
                     >
                       {lead.email}
                     </a>
@@ -397,13 +402,13 @@ export default function LeadDetailPage() {
               )}
               {lead.website && (
                 <div>
-                  <dt className="text-xs text-gray-400">Website</dt>
+                  <dt className="text-xs text-slate-400">Website</dt>
                   <dd>
                     <a
                       href={lead.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
+                      className="break-all text-blue-600 hover:underline"
                     >
                       {lead.website.replace(/^https?:\/\//, "")}
                     </a>
@@ -412,27 +417,27 @@ export default function LeadDetailPage() {
               )}
             </dl>
           ) : (
-            <div className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-sm text-gray-500">
+            <div className="rounded-lg border border-dashed border-slate-200 px-3 py-3 text-sm text-slate-500">
               Kein direkter Kontakt gefunden. Arbeite ueber Website oder Quellseite weiter.
             </div>
           )}
 
           {lead.address && (
             <div>
-              <dt className="text-xs text-gray-400">Adresse</dt>
-              <dd className="text-sm text-gray-800 mt-1">{lead.address}</dd>
+              <dt className="text-xs text-slate-400">Adresse</dt>
+              <dd className="mt-1 text-sm text-slate-800">{lead.address}</dd>
             </div>
           )}
 
           {lead.sourceUrl && (
             <div>
-              <dt className="text-xs text-gray-400">Quellseite</dt>
+              <dt className="text-xs text-slate-400">Quellseite</dt>
               <dd className="mt-1">
                 <a
                   href={lead.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-gray-500 hover:underline break-all"
+                  className="break-all text-xs text-slate-500 hover:underline"
                 >
                   {lead.sourceUrl}
                 </a>
@@ -441,16 +446,14 @@ export default function LeadDetailPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Vertrieb
           </h2>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                Follow-up Datum
-              </label>
+              <label className="mb-1 block text-xs text-slate-400">Follow-up Datum</label>
               <input
                 key={lead.followUpAt ?? "no-follow-up"}
                 type="date"
@@ -466,16 +469,14 @@ export default function LeadDetailPage() {
                     "followUpDate"
                   );
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
-            <div className="rounded-lg bg-gray-50 px-3 py-3 text-sm text-gray-600">
-              <div className="text-xs text-gray-400 mb-1">Arbeitsstand</div>
+            <div className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-600">
+              <div className="mb-1 text-xs text-slate-400">Arbeitsstand</div>
               <div>Gefunden: {formatDate(lead.createdAt)}</div>
-              {lead.contactedAt && (
-                <div>Kontaktiert: {formatDateTime(lead.contactedAt)}</div>
-              )}
+              {lead.contactedAt && <div>Kontaktiert: {formatDateTime(lead.contactedAt)}</div>}
               {lead.job && (
                 <div className="mt-1">
                   Suchlauf: {lead.job.query} in {lead.job.location}
@@ -485,24 +486,24 @@ export default function LeadDetailPage() {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Tags</label>
-            <div className="flex flex-wrap gap-1 mb-2 min-h-[1.75rem]">
+            <label className="mb-1.5 block text-xs text-slate-400">Tags</label>
+            <div className="mb-2 flex min-h-[1.75rem] flex-wrap gap-1">
               {lead.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5"
+                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-700"
                 >
                   {tag}
                   <button
                     onClick={() => removeTag(tag)}
-                    className="text-blue-400 hover:text-blue-700 leading-none font-bold"
+                    className="font-bold leading-none text-blue-400 hover:text-blue-700"
                   >
                     x
                   </button>
                 </span>
               ))}
               {lead.tags.length === 0 && (
-                <span className="text-xs text-gray-300">Noch keine Tags</span>
+                <span className="text-xs text-slate-300">Noch keine Tags</span>
               )}
             </div>
             <div className="flex gap-1.5">
@@ -519,43 +520,41 @@ export default function LeadDetailPage() {
                 }}
                 placeholder="Tag eingeben..."
                 maxLength={50}
-                className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
                 onClick={addTag}
                 disabled={savingKey === "tags"}
-                className="text-xs border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 font-medium disabled:opacity-60"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 disabled:opacity-60"
               >
                 + Tag
               </button>
             </div>
-            <p className="text-xs text-gray-300 mt-1">
-              Enter oder Komma zum Hinzufuegen
-            </p>
+            <p className="mt-1 text-xs text-slate-300">Enter oder Komma zum Hinzufuegen</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2">
+      <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Notizen
           </h2>
-          <span className="text-xs text-gray-300">{notes.length}/2000</span>
+          <span className="text-xs text-slate-300">{notes.length}/2000</span>
         </div>
         <textarea
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={6}
           maxLength={2000}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          placeholder="Gesprächsnotizen, Ansprechpartner, naechste Schritte..."
+          className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Gespraechsnotizen, Ansprechpartner, naechste Schritte..."
         />
         <div className="flex items-center justify-end">
           <button
             onClick={() => void save({ notes }, "notes")}
             disabled={savingKey === "notes" || notes === (lead.notes ?? "")}
-            className="bg-blue-600 text-white text-sm rounded-lg px-4 py-1.5 hover:bg-blue-700 disabled:opacity-50 transition-opacity"
+            className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm text-white transition-opacity hover:bg-blue-700 disabled:opacity-50"
           >
             {savingKey === "notes" ? "Speichern..." : "Notiz speichern"}
           </button>

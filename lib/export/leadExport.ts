@@ -1,5 +1,6 @@
 import type { Lead } from "@prisma/client";
 import { computeConfidence, getConfidenceTier } from "@/lib/parser/normalize";
+import { formatSourceName, formatSourceToken } from "@/lib/sourceLabels";
 
 export interface ExportMeta {
   exportedAt?: Date;
@@ -61,7 +62,7 @@ export function buildLeadExportView(lead: Lead): LeadExportView {
     address: lead.address ?? "",
     city: lead.city ?? "",
     category: lead.category ?? "",
-    sourceName: lead.sourceName ?? "",
+    sourceName: formatSourceName(lead.sourceName) ?? "",
     contactChannels: channels.join(", "),
     confidenceTier: storedTier,
     confidence:
@@ -91,8 +92,8 @@ export function summarizeLeadsForExport(leads: Lead[]): ExportOverview {
 
     const sources = (lead.sourceName ?? "")
       .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
+      .map((value) => formatSourceToken(value))
+      .filter((value): value is string => Boolean(value));
 
     if (!sources.length) {
       sourceBreakdown.unbekannt = (sourceBreakdown.unbekannt ?? 0) + 1;

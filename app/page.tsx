@@ -46,7 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_KPI = [
-  { key: "NEW", label: "Neu", color: "text-gray-700" },
+  { key: "NEW", label: "Neu", color: "text-slate-700" },
   { key: "CONTACTED", label: "Kontaktiert", color: "text-blue-700" },
   { key: "INTERESTED", label: "Interessiert", color: "text-amber-700" },
   { key: "CONVERTED", label: "Gewonnen", color: "text-emerald-700" },
@@ -199,11 +199,8 @@ function Dashboard() {
     const params = new URLSearchParams(searchParams.toString());
 
     for (const [key, value] of Object.entries(updates)) {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
+      if (value) params.set(key, value);
+      else params.delete(key);
     }
 
     const next = params.toString();
@@ -232,9 +229,7 @@ function Dashboard() {
       setSelectedIds(new Set());
       await fetchDashboard(pagination.page);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Bulk-Update fehlgeschlagen"
-      );
+      setError(err instanceof Error ? err.message : "Bulk-Update fehlgeschlagen");
     } finally {
       setBulking(false);
     }
@@ -280,46 +275,121 @@ function Dashboard() {
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
   const rangeStart =
     pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1;
-  const rangeEnd = Math.min(
-    pagination.page * pagination.limit,
-    pagination.total
-  );
+  const rangeEnd = Math.min(pagination.page * pagination.limit, pagination.total);
   const activeFilterCount = [
     statusFilter,
     tagFilter,
     queryFilter,
     followUpFilter,
   ].filter(Boolean).length;
+  const exportQuery = exportParams.toString();
+  const canExport = pagination.total > 0 && !loading;
+
+  const emptyState = useMemo(() => {
+    if (jobId) {
+      return {
+        title: "Noch keine Leads im Suchlauf",
+        description:
+          "Der aktive Suchlauf liefert noch keine Treffer oder der gewaehlte Filter ist zu eng.",
+        actionHref: "/search",
+        actionLabel: "+ Neue Suche",
+      };
+    }
+
+    if (activeFilterCount > 0) {
+      return {
+        title: "Keine Leads fuer die aktuellen Filter",
+        description:
+          "Passe Status, Follow-up, Tag oder Volltextsuche an, um wieder Treffer zu sehen.",
+        actionHref: "/",
+        actionLabel: "Filter pruefen",
+      };
+    }
+
+    return {
+      title: "Noch keine Leads vorhanden",
+      description:
+        "Starte deinen ersten Suchlauf, damit hier neue Firmen, Kontakte und Exportdaten erscheinen.",
+      actionHref: "/search",
+      actionLabel: "+ Neue Suche",
+    };
+  }, [activeFilterCount, jobId]);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Lead Dashboard</h1>
-          <p className="text-sm text-gray-500">
-            {pagination.total} Eintraege
-            {jobId ? " im aktuellen Suchlauf" : " in deinem Vertriebs-Workspace"}
-          </p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+              Dashboard
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-slate-900">Lead Dashboard</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              {jobId
+                ? "Verfolge den aktuellen Suchlauf, pruefe neue Treffer und bearbeite Status oder Follow-ups direkt im Kontext."
+                : "Behalte deine offenen Leads, Follow-ups und Exportkontexte in einem kompakten Vertriebs-Workspace im Blick."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={canExport ? (exportQuery ? `/api/export/csv?${exportQuery}` : "/api/export/csv") : undefined}
+              aria-disabled={!canExport}
+              tabIndex={canExport ? undefined : -1}
+              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                canExport
+                  ? "border-slate-300 text-slate-700 hover:bg-slate-50"
+                  : "cursor-not-allowed border-slate-200 text-slate-300"
+              }`}
+            >
+              CSV
+            </a>
+            <a
+              href={
+                canExport
+                  ? exportQuery
+                    ? `/api/export/xlsx?${exportQuery}`
+                    : "/api/export/xlsx"
+                  : undefined
+              }
+              aria-disabled={!canExport}
+              tabIndex={canExport ? undefined : -1}
+              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                canExport
+                  ? "border-slate-300 text-slate-700 hover:bg-slate-50"
+                  : "cursor-not-allowed border-slate-200 text-slate-300"
+              }`}
+            >
+              XLSX
+            </a>
+            <a
+              href="/search"
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              + Neue Suche
+            </a>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <a
-            href={`/api/export/csv?${exportParams}`}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            CSV
-          </a>
-          <a
-            href={`/api/export/xlsx?${exportParams}`}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            XLSX
-          </a>
-          <a
-            href="/search"
-            className="bg-blue-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Neue Suche
-          </a>
+
+        <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2 py-1">
+            {pagination.total} Eintraege sichtbar
+          </span>
+          {jobId && (
+            <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
+              Kontext: aktueller Suchlauf
+            </span>
+          )}
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">
+              {activeFilterCount} Filter aktiv
+            </span>
+          )}
+          <span className="rounded-full bg-slate-100 px-2 py-1">
+            {canExport
+              ? "Exporte uebernehmen den aktiven Filterkontext"
+              : "Exporte werden aktiv, sobald Leads sichtbar sind"}
+          </span>
         </div>
       </div>
 
@@ -344,36 +414,28 @@ function Dashboard() {
           {STATUS_KPI.map(({ key, label, color }) => (
             <button
               key={key}
-              onClick={() =>
-                updateParams({ status: statusFilter === key ? "" : key, page: "" })
-              }
-              className={`rounded-xl border bg-white px-4 py-3 text-left transition-colors ${
+              onClick={() => updateParams({ status: statusFilter === key ? "" : key, page: "" })}
+              className={`rounded-2xl border bg-white px-4 py-3 text-left shadow-sm transition-colors ${
                 statusFilter === key
                   ? "border-blue-300 ring-1 ring-blue-300"
-                  : "border-gray-200 hover:border-gray-300"
+                  : "border-slate-200 hover:border-slate-300"
               }`}
             >
-              <div className={`text-xl font-bold ${color}`}>
-                {stats.byStatus[key] ?? 0}
-              </div>
-              <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+              <div className={`text-xl font-bold ${color}`}>{stats.byStatus[key] ?? 0}</div>
+              <div className="mt-0.5 text-xs text-slate-500">{label}</div>
             </button>
           ))}
 
           <button
-            onClick={() =>
-              updateParams({ followUp: followUpFilter === "due" ? "" : "due", page: "" })
-            }
-            className={`rounded-xl border bg-white px-4 py-3 text-left transition-colors ${
+            onClick={() => updateParams({ followUp: followUpFilter === "due" ? "" : "due", page: "" })}
+            className={`rounded-2xl border bg-white px-4 py-3 text-left shadow-sm transition-colors ${
               followUpFilter === "due"
                 ? "border-orange-300 ring-1 ring-orange-300"
-                : "border-gray-200 hover:border-gray-300"
+                : "border-slate-200 hover:border-slate-300"
             }`}
           >
-            <div className="text-xl font-bold text-orange-600">
-              {stats.followUpDue}
-            </div>
-            <div className="text-xs text-gray-500 mt-0.5">Faellig</div>
+            <div className="text-xl font-bold text-orange-600">{stats.followUpDue}</div>
+            <div className="mt-0.5 text-xs text-slate-500">Faellig</div>
           </button>
 
           <button
@@ -383,21 +445,21 @@ function Dashboard() {
                 page: "",
               })
             }
-            className={`rounded-xl border bg-white px-4 py-3 text-left transition-colors ${
+            className={`rounded-2xl border bg-white px-4 py-3 text-left shadow-sm transition-colors ${
               followUpFilter === "scheduled"
                 ? "border-violet-300 ring-1 ring-violet-300"
-                : "border-gray-200 hover:border-gray-300"
+                : "border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="text-xl font-bold text-violet-600">
               {stats.followUpScheduled}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">Geplant</div>
+            <div className="mt-0.5 text-xs text-slate-500">Geplant</div>
           </button>
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid gap-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="flex gap-2">
             <input
@@ -408,11 +470,11 @@ function Dashboard() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") applySearchFilter();
               }}
-              className="min-w-0 flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={applySearchFilter}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
             >
               Suchen
             </button>
@@ -427,11 +489,11 @@ function Dashboard() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") applyTagFilter();
               }}
-              className="min-w-0 flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={applyTagFilter}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
             >
               Tag filtern
             </button>
@@ -439,15 +501,15 @@ function Dashboard() {
         </div>
 
         <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex flex-wrap gap-1.5">
             {Object.entries(STATUS_LABELS).map(([status, label]) => (
               <button
                 key={status || "all"}
                 onClick={() => updateParams({ status, page: "" })}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   statusFilter === status
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {label}
@@ -455,15 +517,15 @@ function Dashboard() {
             ))}
           </div>
 
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex flex-wrap gap-1.5">
             {FOLLOW_UP_OPTIONS.map((option) => (
               <button
                 key={option.value || "all-follow-up"}
                 onClick={() => updateParams({ followUp: option.value, page: "" })}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   followUpFilter === option.value
-                    ? "bg-orange-100 text-orange-700 border-orange-300"
-                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                    ? "border-orange-300 bg-orange-100 text-orange-700"
+                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {option.label}
@@ -472,13 +534,11 @@ function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2 xl:ml-auto">
-            <span className="text-xs text-gray-400">Sortierung</span>
+            <span className="text-xs text-slate-400">Sortierung</span>
             <select
               value={sortFilter}
-              onChange={(event) =>
-                updateParams({ sort: event.target.value, page: "" })
-              }
-              className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={(event) => updateParams({ sort: event.target.value, page: "" })}
+              className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -489,7 +549,7 @@ function Dashboard() {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-gray-500 hover:text-gray-800"
+                className="text-xs text-slate-500 hover:text-slate-800"
               >
                 Filter zuruecksetzen
               </button>
@@ -497,51 +557,38 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-          <span className="rounded-full bg-gray-100 px-2 py-1">
+        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2 py-1">
             Gesamt: {stats?.total ?? pagination.total}
           </span>
-          {jobId && (
-            <span className="rounded-full bg-gray-100 px-2 py-1">
-              Kontext: aktueller Suchlauf
-            </span>
-          )}
-          {activeFilterCount > 0 && (
-            <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
-              {activeFilterCount} Filter aktiv
-            </span>
-          )}
           {queryFilter && (
-            <span className="rounded-full bg-gray-100 px-2 py-1">
+            <span className="rounded-full bg-slate-100 px-2 py-1">
               Suche: {queryFilter}
             </span>
           )}
           {tagFilter && (
-            <span className="rounded-full bg-gray-100 px-2 py-1">
+            <span className="rounded-full bg-slate-100 px-2 py-1">
               Tag: {tagFilter}
             </span>
           )}
           {followUpFilter && (
-            <span className="rounded-full bg-gray-100 px-2 py-1">
+            <span className="rounded-full bg-slate-100 px-2 py-1">
               Follow-up:{" "}
-              {
-                FOLLOW_UP_OPTIONS.find((option) => option.value === followUpFilter)
-                  ?.label
-              }
+              {FOLLOW_UP_OPTIONS.find((option) => option.value === followUpFilter)?.label}
             </span>
           )}
         </div>
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 shadow-sm sm:flex-row sm:items-center">
           <span className="text-sm font-medium text-blue-700">
             {selectedIds.size} Leads ausgewaehlt
           </span>
           <select
             value={bulkStatus}
             onChange={(event) => setBulkStatus(event.target.value)}
-            className="text-xs border border-blue-300 rounded-lg px-2 py-1.5 bg-white focus:outline-none"
+            className="rounded-lg border border-blue-300 bg-white px-2 py-1.5 text-xs focus:outline-none"
           >
             <option value="">Status waehlen</option>
             {STATUS_BULK_OPTIONS.map((option) => (
@@ -553,7 +600,7 @@ function Dashboard() {
           <button
             onClick={() => void applyBulk()}
             disabled={!bulkStatus || bulking}
-            className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1.5 hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {bulking ? "Wird gesetzt..." : "Anwenden"}
           </button>
@@ -574,28 +621,29 @@ function Dashboard() {
         onLeadUpdated={() => {
           void fetchDashboard(pagination.page);
         }}
+        emptyState={emptyState}
       />
 
       {pagination.total > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-gray-500">
+        <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-slate-500">
             Zeige {rangeStart}-{rangeEnd} von {pagination.total} Leads
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => changePage(pagination.page - 1)}
               disabled={pagination.page <= 1 || loading}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               Zurueck
             </button>
-            <span className="text-gray-500">
+            <span className="text-slate-500">
               Seite {pagination.page} / {totalPages}
             </span>
             <button
               onClick={() => changePage(pagination.page + 1)}
               disabled={pagination.page >= totalPages || loading}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               Weiter
             </button>

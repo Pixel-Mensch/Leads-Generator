@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getConfidenceTier } from "@/lib/parser/normalize";
+import { formatSourceName } from "@/lib/sourceLabels";
 
 type Lead = {
   id: string;
@@ -20,6 +21,13 @@ type Lead = {
   tags: string[];
   followUpAt: string | null;
   createdAt: string;
+};
+
+type EmptyState = {
+  title: string;
+  description: string;
+  actionHref: string;
+  actionLabel: string;
 };
 
 const STATUS_OPTIONS = [
@@ -60,8 +68,8 @@ function getFollowUpBadge(followUpAt: string | null) {
   return {
     label: `${isDue ? "Faellig" : "Follow-up"}: ${formatDate(followUpAt)}`,
     className: isDue
-      ? "bg-orange-100 text-orange-700 border-orange-200"
-      : "bg-violet-100 text-violet-700 border-violet-200",
+      ? "border-orange-200 bg-orange-100 text-orange-700"
+      : "border-violet-200 bg-violet-100 text-violet-700",
   };
 }
 
@@ -76,18 +84,27 @@ function getQuickActions(lead: Lead) {
   return actions;
 }
 
+const DEFAULT_EMPTY_STATE: EmptyState = {
+  title: "Keine Leads im aktuellen Kontext",
+  description: "Starte eine neue Suche oder lockere die gesetzten Filter.",
+  actionHref: "/search",
+  actionLabel: "+ Neue Suche",
+};
+
 export default function LeadsTable({
   leads,
   loading,
   selectedIds = new Set(),
   onSelectionChange,
   onLeadUpdated,
+  emptyState = DEFAULT_EMPTY_STATE,
 }: {
   leads: Lead[];
   loading: boolean;
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
   onLeadUpdated: () => void;
+  emptyState?: EmptyState;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
@@ -139,16 +156,32 @@ export default function LeadsTable({
   function toggleAll() {
     if (selectedIds.size === leads.length) {
       onSelectionChange?.(new Set());
-    } else {
-      onSelectionChange?.(new Set(leads.map((lead) => lead.id)));
+      return;
     }
+
+    onSelectionChange?.(new Set(leads.map((lead) => lead.id)));
   }
 
   if (loading && leads.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
-        <div className="animate-pulse text-sm text-gray-400">
-          Leads werden geladen...
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="hidden sm:block">
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-16 animate-pulse rounded-xl bg-slate-100"
+              />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2 sm:hidden">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-28 animate-pulse rounded-xl bg-slate-100"
+            />
+          ))}
         </div>
       </div>
     );
@@ -156,18 +189,14 @@ export default function LeadsTable({
 
   if (!loading && leads.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-10 text-center space-y-3">
-        <div className="text-sm font-medium text-gray-700">
-          Keine Leads im aktuellen Kontext
-        </div>
-        <div className="text-xs text-gray-400">
-          Starte eine neue Suche oder lockere die gesetzten Filter.
-        </div>
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <h2 className="text-base font-semibold text-slate-900">{emptyState.title}</h2>
+        <p className="mt-2 text-sm text-slate-500">{emptyState.description}</p>
         <a
-          href="/search"
-          className="inline-block bg-blue-600 text-white text-sm rounded-lg px-4 py-1.5 hover:bg-blue-700"
+          href={emptyState.actionHref}
+          className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + Neue Suche
+          {emptyState.actionLabel}
         </a>
       </div>
     );
@@ -183,25 +212,25 @@ export default function LeadsTable({
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto hidden sm:block">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide bg-gray-50">
-                <th className="px-3 py-3 w-8">
+              <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <th className="w-8 px-3 py-3">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
-                    className="rounded border-gray-300 cursor-pointer"
+                    className="cursor-pointer rounded border-gray-300"
                   />
                 </th>
-                <th className="text-left px-4 py-3 font-medium">Firma</th>
-                <th className="text-left px-4 py-3 font-medium">Kontakt</th>
-                <th className="text-left px-4 py-3 font-medium">Ort / Quelle</th>
-                <th className="text-left px-4 py-3 font-medium">Qualitaet</th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-                <th className="text-left px-4 py-3 font-medium">Notiz</th>
+                <th className="px-4 py-3 text-left font-medium">Firma</th>
+                <th className="px-4 py-3 text-left font-medium">Kontakt</th>
+                <th className="px-4 py-3 text-left font-medium">Ort / Quelle</th>
+                <th className="px-4 py-3 text-left font-medium">Qualitaet</th>
+                <th className="px-4 py-3 text-left font-medium">Status</th>
+                <th className="px-4 py-3 text-left font-medium">Notiz</th>
               </tr>
             </thead>
             <tbody>
@@ -211,26 +240,27 @@ export default function LeadsTable({
                 const followUpBadge = getFollowUpBadge(lead.followUpAt);
                 const quickActions = getQuickActions(lead);
                 const isBusy = busyLeadId === lead.id;
+                const sourceLabel = formatSourceName(lead.sourceName);
 
                 return (
                   <tr
                     key={lead.id}
-                    className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${
+                    className={`border-b border-slate-50 transition-colors hover:bg-slate-50 ${
                       isSelected ? "bg-blue-50" : ""
                     }`}
                   >
-                    <td className="px-3 py-3 text-center align-top">
+                    <td className="px-3 py-3 align-top text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelect(lead.id)}
-                        className="rounded border-gray-300 cursor-pointer"
+                        className="cursor-pointer rounded border-gray-300"
                       />
                     </td>
-                    <td className="px-4 py-3 max-w-[260px] align-top">
+                    <td className="max-w-[260px] px-4 py-3 align-top">
                       <Link
                         href={`/leads/${lead.id}`}
-                        className="font-medium text-gray-900 hover:text-blue-600 truncate block"
+                        className="block truncate font-medium text-slate-900 hover:text-blue-600"
                       >
                         {lead.companyName}
                       </Link>
@@ -239,17 +269,17 @@ export default function LeadsTable({
                           href={lead.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline truncate block mt-0.5"
+                          className="mt-0.5 block truncate text-xs text-blue-500 hover:underline"
                         >
                           {lead.website.replace(/^https?:\/\//, "")}
                         </a>
                       )}
                       {lead.tags.length > 0 && (
-                        <div className="flex gap-1 flex-wrap mt-2">
+                        <div className="mt-2 flex flex-wrap gap-1">
                           {lead.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="text-xs bg-gray-100 text-gray-500 rounded px-1.5 py-0.5"
+                              className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500"
                             >
                               {tag}
                             </span>
@@ -266,12 +296,12 @@ export default function LeadsTable({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 max-w-[230px] align-top">
+                    <td className="max-w-[230px] px-4 py-3 align-top">
                       <div className="space-y-1">
                         {lead.email && (
                           <a
                             href={`mailto:${lead.email}`}
-                            className="text-xs text-gray-700 hover:underline block truncate"
+                            className="block truncate text-xs text-slate-700 hover:underline"
                           >
                             {lead.email}
                           </a>
@@ -279,31 +309,31 @@ export default function LeadsTable({
                         {lead.phone && (
                           <a
                             href={`tel:${lead.phone}`}
-                            className="text-xs text-gray-500 block hover:underline"
+                            className="block text-xs text-slate-500 hover:underline"
                           >
                             {lead.phone}
                           </a>
                         )}
                         {!lead.email && !lead.phone && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-slate-400">
                             Keine direkte Kontaktmoeglichkeit
                           </span>
                         )}
                       </div>
                       {quickActions.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="mt-2 flex flex-wrap gap-1">
                           {quickActions.map((action) => (
                             <a
                               key={`${lead.id}-${action.label}`}
                               href={action.href}
                               target={
-                                action.href.startsWith("mailto:")
-                                  || action.href.startsWith("tel:")
+                                action.href.startsWith("mailto:") ||
+                                action.href.startsWith("tel:")
                                   ? undefined
                                   : "_blank"
                               }
                               rel="noopener noreferrer"
-                              className="inline-flex items-center rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-50"
+                              className="inline-flex items-center rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50"
                             >
                               {action.label}
                             </a>
@@ -311,32 +341,32 @@ export default function LeadsTable({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 max-w-[180px] align-top">
-                      <div className="text-xs text-gray-700 truncate">
+                    <td className="max-w-[180px] px-4 py-3 align-top">
+                      <div className="truncate text-xs text-slate-700">
                         {lead.city ?? "-"}
                       </div>
                       {lead.category && (
-                        <div className="text-xs text-gray-400 truncate">
+                        <div className="truncate text-xs text-slate-400">
                           {lead.category}
                         </div>
                       )}
-                      {lead.sourceName && (
-                        <div className="text-xs text-gray-300 truncate mt-1">
-                          Quelle: {lead.sourceName}
+                      {sourceLabel && (
+                        <div className="mt-1 truncate text-xs text-slate-400">
+                          Quelle: {sourceLabel}
                         </div>
                       )}
-                      <div className="text-xs text-gray-300 mt-1">
+                      <div className="mt-1 text-xs text-slate-300">
                         Gefunden: {formatDate(lead.createdAt)}
                       </div>
                     </td>
                     <td className="px-4 py-3 align-top">
                       <span
-                        className={`text-xs font-semibold rounded-full px-2 py-0.5 ${TIER_BADGE[tier]}`}
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${TIER_BADGE[tier]}`}
                       >
                         {tier}
                       </span>
                       {lead.confidence !== null && (
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="mt-1 text-xs text-slate-400">
                           {Math.round(lead.confidence * 100)}%
                         </div>
                       )}
@@ -348,7 +378,7 @@ export default function LeadsTable({
                         onChange={async (event) => {
                           await patchLead(lead.id, { status: event.target.value });
                         }}
-                        className={`text-xs rounded-full px-2 py-1 border-0 font-medium cursor-pointer ${
+                        className={`cursor-pointer rounded-full border-0 px-2 py-1 text-xs font-medium ${
                           STATUS_COLOR[lead.status] ?? "bg-gray-100 text-gray-700"
                         } disabled:opacity-60`}
                       >
@@ -359,7 +389,7 @@ export default function LeadsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3 max-w-[220px] align-top">
+                    <td className="max-w-[220px] px-4 py-3 align-top">
                       {editing === lead.id ? (
                         <div className="flex flex-col gap-1">
                           <input
@@ -370,19 +400,19 @@ export default function LeadsTable({
                               if (event.key === "Enter") void saveNote(lead.id);
                               if (event.key === "Escape") setEditing(null);
                             }}
-                            className="border border-gray-300 rounded px-2 py-1 text-xs w-full"
+                            className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
                             placeholder="Notiz..."
                           />
                           <div className="flex gap-2">
                             <button
                               onClick={() => void saveNote(lead.id)}
-                              className="text-xs text-green-700 hover:underline"
+                              className="text-xs text-emerald-700 hover:underline"
                             >
                               Speichern
                             </button>
                             <button
                               onClick={() => setEditing(null)}
-                              className="text-xs text-gray-400 hover:underline"
+                              className="text-xs text-slate-400 hover:underline"
                             >
                               Abbrechen
                             </button>
@@ -394,14 +424,10 @@ export default function LeadsTable({
                             setEditing(lead.id);
                             setNoteDraft(lead.notes ?? "");
                           }}
-                          className="text-xs text-left text-gray-500 hover:text-gray-700 truncate block max-w-full"
+                          className="block max-w-full truncate text-left text-xs text-slate-500 hover:text-slate-700"
                           title={lead.notes ?? "Notiz hinzufuegen"}
                         >
-                          {lead.notes ? (
-                            lead.notes
-                          ) : (
-                            <span className="text-gray-300">+ Notiz</span>
-                          )}
+                          {lead.notes ? lead.notes : <span className="text-slate-300">+ Notiz</span>}
                         </button>
                       )}
                     </td>
@@ -412,39 +438,40 @@ export default function LeadsTable({
           </table>
         </div>
 
-        <div className="sm:hidden divide-y divide-gray-100">
+        <div className="divide-y divide-slate-100 sm:hidden">
           {leads.map((lead) => {
             const tier = getConfidenceTier(lead.confidence);
             const isSelected = selectedIds.has(lead.id);
             const followUpBadge = getFollowUpBadge(lead.followUpAt);
             const quickActions = getQuickActions(lead);
             const isBusy = busyLeadId === lead.id;
+            const sourceLabel = formatSourceName(lead.sourceName);
 
             return (
-              <div key={lead.id} className={`p-4 space-y-3 ${isSelected ? "bg-blue-50" : ""}`}>
+              <div key={lead.id} className={`space-y-3 p-4 ${isSelected ? "bg-blue-50" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 min-w-0">
+                  <div className="flex min-w-0 items-start gap-2">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelect(lead.id)}
-                      className="mt-1 rounded border-gray-300 shrink-0"
+                      className="mt-1 shrink-0 rounded border-gray-300"
                     />
                     <div className="min-w-0">
                       <Link
                         href={`/leads/${lead.id}`}
-                        className="font-medium text-gray-900 hover:text-blue-600 block truncate"
+                        className="block truncate font-medium text-slate-900 hover:text-blue-600"
                       >
                         {lead.companyName}
                       </Link>
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="mt-0.5 text-xs text-slate-400">
                         {lead.city ?? "-"}
-                        {lead.category ? ` · ${lead.category}` : ""}
+                        {lead.category ? ` | ${lead.category}` : ""}
                       </div>
                     </div>
                   </div>
                   <span
-                    className={`text-xs font-semibold rounded-full px-1.5 py-0.5 ${TIER_BADGE[tier]}`}
+                    className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${TIER_BADGE[tier]}`}
                   >
                     {tier}
                   </span>
@@ -457,7 +484,7 @@ export default function LeadsTable({
                     onChange={async (event) => {
                       await patchLead(lead.id, { status: event.target.value });
                     }}
-                    className={`text-xs rounded-full px-2 py-1 border-0 font-medium ${
+                    className={`rounded-full border-0 px-2 py-1 text-xs font-medium ${
                       STATUS_COLOR[lead.status] ?? "bg-gray-100 text-gray-700"
                     } disabled:opacity-60`}
                   >
@@ -476,25 +503,22 @@ export default function LeadsTable({
                   )}
                 </div>
 
-                <div className="space-y-1 text-xs text-gray-500 pl-6">
+                <div className="space-y-1 pl-6 text-xs text-slate-500">
                   {lead.phone && (
                     <a href={`tel:${lead.phone}`} className="block text-blue-600">
                       {lead.phone}
                     </a>
                   )}
                   {lead.email && (
-                    <a
-                      href={`mailto:${lead.email}`}
-                      className="block text-blue-600 truncate"
-                    >
+                    <a href={`mailto:${lead.email}`} className="block truncate text-blue-600">
                       {lead.email}
                     </a>
                   )}
                   {!lead.phone && !lead.email && (
-                    <div className="text-gray-400">Keine direkte Kontaktmoeglichkeit</div>
+                    <div className="text-slate-400">Keine direkte Kontaktmoeglichkeit</div>
                   )}
-                  {lead.sourceName && <div>Quelle: {lead.sourceName}</div>}
-                  {lead.notes && <div className="text-gray-400 italic">{lead.notes}</div>}
+                  {sourceLabel && <div>Quelle: {sourceLabel}</div>}
+                  {lead.notes && <div className="italic text-slate-400">{lead.notes}</div>}
                 </div>
 
                 {quickActions.length > 0 && (
@@ -504,13 +528,13 @@ export default function LeadsTable({
                         key={`${lead.id}-${action.label}-mobile`}
                         href={action.href}
                         target={
-                          action.href.startsWith("mailto:")
-                            || action.href.startsWith("tel:")
+                          action.href.startsWith("mailto:") ||
+                          action.href.startsWith("tel:")
                             ? undefined
                             : "_blank"
                         }
                         rel="noopener noreferrer"
-                        className="rounded-full border border-gray-200 px-2.5 py-1 text-xs text-gray-600"
+                        className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600"
                       >
                         {action.label}
                       </a>
@@ -519,11 +543,11 @@ export default function LeadsTable({
                 )}
 
                 {lead.tags.length > 0 && (
-                  <div className="flex gap-1 flex-wrap pl-6">
+                  <div className="flex flex-wrap gap-1 pl-6">
                     {lead.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs bg-gray-100 text-gray-500 rounded px-1.5 py-0.5"
+                        className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500"
                       >
                         {tag}
                       </span>
