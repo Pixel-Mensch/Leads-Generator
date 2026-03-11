@@ -7,7 +7,6 @@
  */
 
 import { db } from "@/lib/db";
-import { JobStatus } from "@prisma/client";
 import { scrapeOverpass } from "./sources/overpass";
 import { scrapeGelbeSeiten } from "./sources/gelbeseiten";
 import { deduplicateLeads } from "./deduplicator";

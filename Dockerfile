@@ -10,6 +10,9 @@ RUN npm ci
 # Build
 FROM base AS builder
 WORKDIR /app
+ENV DATABASE_URL=postgresql://leads:leads_secret@localhost:5432/leads_db
+ENV AUTH_SECRET=build-time-placeholder-secret
+ENV AUTH_URL=http://localhost:3000
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate

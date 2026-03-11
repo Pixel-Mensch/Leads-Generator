@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Project = {
@@ -18,13 +18,23 @@ export default function ProjectsPage() {
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  async function fetchProjects() {
+  const loadProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
     if (res.ok) setProjects(await res.json());
     setLoading(false);
-  }
+  }, []);
 
-  useEffect(() => { fetchProjects(); }, []);
+  const fetchProjects = useCallback(async () => {
+    setLoading(true);
+    await loadProjects();
+  }, [loadProjects]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      void loadProjects();
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [loadProjects]);
 
   async function createProject(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +48,7 @@ export default function ProjectsPage() {
     setNewName("");
     setShowForm(false);
     setCreating(false);
-    fetchProjects();
+    await fetchProjects();
   }
 
   return (

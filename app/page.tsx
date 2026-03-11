@@ -72,15 +72,14 @@ function Dashboard() {
   const [leads, setLeads]         = useState<Lead[]>([]);
   const [stats, setStats]         = useState<Stats | null>(null);
   const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: 50 });
-  const [loading, setLoading]     = useState(false);
+  const [loading, setLoading]     = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus]   = useState("");
   const [bulking, setBulking]         = useState(false);
   const [tagInput, setTagInput]       = useState(tagFilter);
 
-  const fetchLeads = useCallback(
+  const loadLeads = useCallback(
     async (page = 1) => {
-      setLoading(true);
       const params = new URLSearchParams();
       if (jobId)        params.set("jobId",  jobId);
       if (statusFilter) params.set("status", statusFilter);
@@ -99,6 +98,14 @@ function Dashboard() {
     [jobId, statusFilter, sortFilter, tagFilter]
   );
 
+  const fetchLeads = useCallback(
+    async (page = 1) => {
+      setLoading(true);
+      await loadLeads(page);
+    },
+    [loadLeads]
+  );
+
   const fetchStats = useCallback(async () => {
     const params = new URLSearchParams();
     if (jobId) params.set("jobId", jobId);
@@ -107,10 +114,13 @@ function Dashboard() {
   }, [jobId]);
 
   useEffect(() => {
-    fetchLeads(1);
-    fetchStats();
-    setSelectedIds(new Set());
-  }, [fetchLeads, fetchStats]);
+    const timeoutId = setTimeout(() => {
+      setSelectedIds(new Set());
+      void loadLeads(1);
+      void fetchStats();
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [loadLeads, fetchStats]);
 
   // Poll while a job is running
   useEffect(() => {
@@ -119,16 +129,17 @@ function Dashboard() {
       const res = await fetch(`/api/jobs/${jobId}`);
       if (res.ok) {
         const job = await res.json();
-        fetchLeads(1);
-        fetchStats();
+        void loadLeads(1);
+        void fetchStats();
         if (job.status === "COMPLETED" || job.status === "FAILED") clearInterval(interval);
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, [jobId, fetchLeads, fetchStats]);
+  }, [jobId, loadLeads, fetchStats]);
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
+    setLoading(true);
     for (const [k, v] of Object.entries(updates)) {
       if (v) params.set(k, v); else params.delete(k);
     }
@@ -298,14 +309,14 @@ function Dashboard() {
         loading={loading}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        onLeadUpdated={() => { fetchLeads(pagination.page); fetchStats(); }}
+        onLeadUpdated={() => { void fetchLeads(pagination.page); void fetchStats(); }}
       />
 
       {/* ── Pagination ──────────────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-1 mt-2">
           {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} onClick={() => fetchLeads(i + 1)}
+            <button key={i} onClick={() => void fetchLeads(i + 1)}
               className={`w-8 h-8 text-sm rounded border ${
                 pagination.page === i + 1
                   ? "bg-blue-600 text-white border-blue-600"

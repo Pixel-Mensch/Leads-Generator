@@ -14,11 +14,6 @@ import {
 import type { RawLead } from "./overpass";
 
 const BASE_URL = "https://www.gelbeseiten.de";
-const DELAY_MS = parseInt(process.env.SCRAPE_DELAY_MS ?? "2000", 10);
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function fetchPage(url: string): Promise<string | null> {
   try {
