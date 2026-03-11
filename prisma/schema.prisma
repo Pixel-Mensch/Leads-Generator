@@ -115,6 +115,7 @@ model Lead {
   city        String?
   category    String?
   sourceUrl   String?
+  sourceName  String?    // which scraper produced this lead (overpass | gelbeseiten)
   confidence  Float?
 
   status      LeadStatus @default(NEW)
