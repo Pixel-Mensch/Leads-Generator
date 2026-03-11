@@ -7,6 +7,17 @@ type SortField = "confidence" | "createdAt" | "companyName" | "city" | "followUp
 
 const SORT_FIELDS: SortField[] = ["confidence", "createdAt", "companyName", "city", "followUpAt"];
 
+function buildSourceNameFilter(sourceName: string) {
+  return {
+    OR: [
+      { sourceName: { equals: sourceName, mode: "insensitive" as const } },
+      { sourceName: { startsWith: `${sourceName},`, mode: "insensitive" as const } },
+      { sourceName: { endsWith: `,${sourceName}`, mode: "insensitive" as const } },
+      { sourceName: { contains: `,${sourceName},`, mode: "insensitive" as const } },
+    ],
+  };
+}
+
 export async function GET(req: NextRequest) {
   const { session, error } = await requireAuth();
   if (error) return error;
@@ -36,7 +47,7 @@ export async function GET(req: NextRequest) {
       ...(status     ? { status }                                           : {}),
       ...(tag        ? { tags: { has: tag } }                               : {}),
       ...(category   ? { category: { contains: category, mode: "insensitive" as const } } : {}),
-      ...(sourceName ? { sourceName }                                       : {}),
+      ...(sourceName ? buildSourceNameFilter(sourceName)                    : {}),
     };
 
     // Build orderBy — always secondary sort by createdAt desc for stability

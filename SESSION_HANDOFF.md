@@ -31,6 +31,7 @@
 - Gelbe-Seiten-Scraper wurde gegen reales Live-HTML validiert und liest jetzt Base64-Website-Links, eingebettete JSON-Kontaktdaten, robustere Detail-URLs und kompakte Adressbloecke
 - CSV- und XLSX-Exporte uebernehmen jetzt `listId`, `tag`, `category` und `sourceName` konsistent als Filter
 - Exporte zeigen jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer bessere Nachvollziehbarkeit
+- `sourceName`-Filter in Lead- und Export-APIs matchen jetzt auch kombinierte deduplizierte Quellenwerte
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`

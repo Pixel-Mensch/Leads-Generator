@@ -4,6 +4,17 @@ import { requireAuth } from "@/lib/session";
 import { leadsToXLSX } from "@/lib/export/xlsx";
 import { LeadStatus } from "@prisma/client";
 
+function buildSourceNameFilter(sourceName: string) {
+  return {
+    OR: [
+      { sourceName: { equals: sourceName, mode: "insensitive" as const } },
+      { sourceName: { startsWith: `${sourceName},`, mode: "insensitive" as const } },
+      { sourceName: { endsWith: `,${sourceName}`, mode: "insensitive" as const } },
+      { sourceName: { contains: `,${sourceName},`, mode: "insensitive" as const } },
+    ],
+  };
+}
+
 export async function GET(req: NextRequest) {
   const { session, error } = await requireAuth();
   if (error) return error;
@@ -29,7 +40,7 @@ export async function GET(req: NextRequest) {
         ...(category
           ? { category: { contains: category, mode: "insensitive" as const } }
           : {}),
-        ...(sourceName ? { sourceName } : {}),
+        ...(sourceName ? buildSourceNameFilter(sourceName) : {}),
       },
       orderBy: [{ confidence: "desc" }, { createdAt: "desc" }],
     });
