@@ -1,20 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Source = "overpass" | "gelbeseiten" | "both";
+type Project = { id: string; name: string };
 
-export default function SearchPage() {
+function SearchForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedProject = searchParams.get("projectId") ?? "";
+
   const [form, setForm] = useState({
     query: "",
     location: "",
     radius: 5,
     source: "overpass" as Source,
+    projectId: preselectedProject,
   });
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setProjects(data);
+      });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,11 +36,15 @@ export default function SearchPage() {
     setLoading(true);
 
     try {
-      // Create job
+      const payload = {
+        ...form,
+        projectId: form.projectId || undefined,
+      };
+
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -34,7 +52,6 @@ export default function SearchPage() {
       }
       const job = await res.json();
 
-      // Trigger job
       await fetch(`/api/jobs/${job.id}/run`, { method: "POST" });
 
       router.push(`/?jobId=${job.id}`);
@@ -53,6 +70,22 @@ export default function SearchPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        {projects.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Projekt</label>
+            <select
+              value={form.projectId}
+              onChange={(e) => setForm((f) => ({ ...f, projectId: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Kein Projekt</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Branche / Stichwort
@@ -80,9 +113,7 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Radius (km)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Radius (km)</label>
           <input
             type="number"
             min={1}
@@ -121,5 +152,13 @@ export default function SearchPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchForm />
+    </Suspense>
   );
 }

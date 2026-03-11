@@ -7,6 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Auth & Users ────────────────────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  passwordHash     String?
+  role             UserRole  @default(USER)
+  plan             Plan      @default(FREE)
+  planExpiresAt    DateTime?
+
+  // Billing preparation — populate when Stripe is integrated
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  projects         Project[]
+  jobs             SearchJob[]
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ─── Projects & Lists ────────────────────────────────────────────────────────
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // soft delete — preserve lead data history
+
+  jobs        SearchJob[]
+  lists       LeadList[]
+}
+
+model LeadList {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  leads       Lead[]
+}
+
+// ─── Scraping Jobs ───────────────────────────────────────────────────────────
+
 model SearchJob {
   id          String    @id @default(cuid())
   query       String
@@ -16,6 +84,13 @@ model SearchJob {
   status      JobStatus @default(PENDING)
   totalFound  Int       @default(0)
   error       String?
+
+  // Ownership — nullable for backwards compat with pre-auth data
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   leads       Lead[]
@@ -27,6 +102,8 @@ enum JobStatus {
   COMPLETED
   FAILED
 }
+
+// ─── Leads ───────────────────────────────────────────────────────────────────
 
 model Lead {
   id          String     @id @default(cuid())
@@ -46,6 +123,10 @@ model Lead {
 
   jobId       String
   job         SearchJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // Optional: assign to a named list within a project
+  listId      String?
+  list        LeadList?  @relation(fields: [listId], references: [id], onDelete: SetNull)
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
