@@ -6,9 +6,9 @@ Sammelt öffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Session 4)
+## Aktueller Stand (2026-03-11, Session 5)
 
-**Datenqualität-Session abgeschlossen auf `feat/quality-improvements`. Build-Test und DB-Migration noch ausstehend.**
+**UX-Session abgeschlossen auf `feat/ux-improvements`. Build-Test und DB-Migration noch ausstehend.**
 
 ## Tech Stack
 
@@ -57,11 +57,20 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | **sourceName Tracking (DB + Exporte)** | **neu Session 4** |
 | **CSV Export (Quelle, Qualität, Metadaten)** | **verbessert Session 4** |
 | **XLSX Export (Hyperlinks, Farben, Meta-Sheet)** | **verbessert Session 4** |
+| **Tags auf Leads (DB + API + UI)** | **neu Session 5** |
+| **Follow-up Datum (DB + API + UI)** | **neu Session 5** |
+| **KPI-Bar Dashboard (Zähler pro Status)** | **neu Session 5** |
+| **Sort-Control Dashboard** | **neu Session 5** |
+| **Bulk-Status-Änderung** | **neu Session 5** |
+| **Firmenname → Detailseite Link** | **neu Session 5** |
+| **Lead-Detailseite (2-Spalten, Tags, Follow-up)** | **verbessert Session 5** |
+| **/api/leads/stats** | **neu Session 5** |
+| **/api/leads/bulk** | **neu Session 5** |
 
 ## Bekannte Probleme / Lücken
 
 - **Build nicht ausgeführt** — `npm run build` steht aus; TypeScript-Fehler möglich
-- **DB Migration ausstehend** — Schema hat neues `Lead.sourceName` Feld (nullable, rückwärtskompatibel)
+- **DB Migration ausstehend** — Schema hat neue Felder `Lead.sourceName`, `Lead.tags`, `Lead.followUpAt` (alle nullable/default, rückwärtskompatibel)
 - **AUTH_SECRET muss gesetzt werden** — in .env, nie committen
 - **Playwright nicht aktiv** — installiert aber kein Source nutzt es
 - **Gelbe Seiten Selektoren heuristisch** — können brechen
