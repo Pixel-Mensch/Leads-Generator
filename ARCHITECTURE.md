@@ -1,63 +1,116 @@
 # ARCHITECTURE.md
 
-> **Note:** The project has not been implemented yet. This file describes the intended architecture based on the project name and context. Update this file as real decisions are made.
+> Stand: 2026-03-11 — MVP Session 1
 
-## High-Level Structure
+## High-Level Struktur
+
 ```
-Leads-Scraper/
-├── src/                    # [PLACEHOLDER] Main source code
-│   ├── scraper/            # Fetches raw data from sources
-│   ├── parser/             # Normalizes and structures data
-│   ├── storage/            # Persists output (CSV, DB, JSON)
-│   └── cli.py / index.ts  # Entry point / CLI interface
-├── tests/                  # [PLACEHOLDER] Test suite
-├── .env.example            # Environment variable template (no real values)
-├── .gitignore
-├── README.md               # [MISSING — needs to be created]
-└── [build/dependency file] # e.g., package.json or requirements.txt
+leads-scraper/
+├── app/                          # Next.js App Router
+│   ├── layout.tsx                # Root Layout, Navigation
+│   ├── page.tsx                  # Dashboard: Lead-Liste, Filter, Paginierung, Export
+│   ├── search/page.tsx           # Suchmaske (Branche, Ort, Radius, Quelle)
+│   ├── leads/[id]/page.tsx       # Lead-Detailseite
+│   └── api/
+│       ├── jobs/route.ts         # POST (erstellen), GET (Liste)
+│       ├── jobs/[id]/route.ts    # GET (Status), DELETE
+│       ├── jobs/[id]/run/route.ts # POST (Job starten, fire-and-forget)
+│       ├── leads/route.ts        # GET (Liste, paginiert, gefiltert)
+│       ├── leads/[id]/route.ts   # GET, PATCH (Status/Notizen), DELETE
+│       ├── export/csv/route.ts   # GET → CSV Download
+│       └── export/xlsx/route.ts  # GET → XLSX Download
+├── components/
+│   └── leads/
+│       ├── LeadsTable.tsx        # Responsive Tabelle + Status-Inline-Edit
+│       └── JobStatus.tsx         # Job-Statusanzeige mit Auto-Poll
+├── lib/
+│   ├── db.ts                     # Prisma Client Singleton
+│   ├── scraper/
+│   │   ├── orchestrator.ts       # Job-Runner: wählt Quelle, scrapt, dedupliziert, speichert
+│   │   ├── deduplicator.ts       # Domain, Phone, Name Deduplizierung
+│   │   └── sources/
+│   │       ├── overpass.ts       # OpenStreetMap / Overpass API (frei, ToS-konform)
+│   │       └── gelbeseiten.ts    # Gelbe Seiten DE (Cheerio, rate-limited)
+│   ├── parser/
+│   │   └── normalize.ts          # Phone, URL, Email Normalisierung + Confidence Score
+│   └── export/
+│       ├── csv.ts                # CSV mit UTF-8 BOM (Excel-kompatibel)
+│       └── xlsx.ts               # XLSX mit ExcelJS (Header-Styling, AutoFilter)
+├── prisma/
+│   └── schema.prisma             # Datenmodell (SearchJob, Lead, Enums)
+├── docker-compose.yml            # PostgreSQL + App Container
+├── Dockerfile                    # Multi-Stage Build (Node 20 Alpine, standalone)
+├── next.config.ts                # standalone output, serverExternalPackages
+├── package.json                  # Dependencies + DB-Skripte
+└── .env.example                  # Vorlage für Umgebungsvariablen
 ```
 
-## Main Modules and Responsibilities
+## Datenmodell
 
-| Module | Responsibility |
-|--------|---------------|
-| `scraper/` | HTTP requests, browser automation, rate limiting, pagination |
-| `parser/` | Field extraction, data normalization, deduplication |
-| `storage/` | Writing results to CSV / JSON / database |
-| `cli` / entry point | Argument parsing, orchestrating the pipeline |
+### SearchJob
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| id | cuid | Primärschlüssel |
+| query | String | Suchbegriff (Branche) |
+| location | String | Ort |
+| radius | Int? | Radius in km |
+| source | String | overpass / gelbeseiten / both |
+| status | JobStatus | PENDING / RUNNING / COMPLETED / FAILED |
+| totalFound | Int | Anzahl gefundener Rohdaten |
+| error | String? | Fehlermeldung bei FAILED |
 
-## Entry Points
-> [PLACEHOLDER] Will be defined once tech stack is chosen.
-- Likely: `python main.py` or `node src/index.js` or similar.
+### Lead
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| id | cuid | Primärschlüssel |
+| companyName | String | Firmenname |
+| website | String? | Normalisierte URL |
+| email | String? | Normalisierte E-Mail |
+| phone | String? | Normalisierte Telefonnummer |
+| address | String? | Vollständige Adresse |
+| city | String? | Ort |
+| category | String? | Branche / Kategorie |
+| sourceUrl | String? | Direkte URL des Treffers |
+| confidence | Float? | 0–1, berechneter Qualitätsscore |
+| status | LeadStatus | NEW / CONTACTED / INTERESTED / NOT_INTERESTED / CONVERTED / INVALID |
+| notes | String? | Freitext für Vertriebsnotizen |
+| contactedAt | DateTime? | Zeitpunkt der Kontaktaufnahme |
+| jobId | String | FK → SearchJob |
 
-## Important Flows
+## Hauptfluss: Lead-Erfassung
 
-### Lead Scraping Pipeline (intended)
 ```
-User invokes CLI
-  → Scraper fetches pages from target source(s)
-  → Parser extracts and normalizes lead fields
-  → Storage writes output (CSV / JSON / DB)
-  → CLI reports summary to user
+User: Suchmaske ausfüllen (query, location, radius, source)
+  → POST /api/jobs           (Job anlegen, Status: PENDING)
+  → POST /api/jobs/:id/run   (Job starten, fire-and-forget, 202 Accepted)
+  → orchestrator.runJob()
+      → geocodeLocation()    (Nominatim OSM → lat/lon)
+      → scrapeOverpass()     (Overpass API → strukturierte Daten)
+      → scrapeGelbeSeiten()  (Cheerio auf gelbeseiten.de, rate-limited)
+      → deduplicateLeads()   (Domain + Phone + Name dedup)
+      → db.lead.createMany() (Prisma, skipDuplicates)
+      → Job Status: COMPLETED
+  → UI pollt /api/jobs/:id alle 4s
+  → Dashboard zeigt Leads, nach Confidence sortiert
 ```
 
-## Important Files
-> [PLACEHOLDER — populate as files are created]
+## Technologie-Entscheidungen
 
-| File | Purpose |
-|------|---------|
-| README.md | Setup and usage documentation (MISSING) |
-| .gitignore | Prevents secrets and build artifacts from being committed |
-| .env.example | Template for required environment variables |
+| Technologie | Begründung |
+|-------------|-----------|
+| Next.js 16 App Router | Server Components, API Routes, standalone build |
+| Prisma 7 + PostgreSQL | Typsicheres ORM, migrations-fähig |
+| Overpass API (OSM) | Kostenlos, ToS-konform, strukturierte Daten |
+| Gelbe Seiten | Öffentliches Verzeichnis, Cheerio reicht für HTML |
+| Playwright | Installiert, bereit für JS-heavy Quellen in Phase 2 |
+| ExcelJS | XLSX mit Styling und AutoFilter |
+| csv-stringify | Zuverlässig, BOM-Support für Excel |
+| Zod | Schema-Validierung für API-Inputs |
+| Tailwind CSS 4 | Utility-first, kein schweres Framework |
 
-## Technology Decisions
-> [NOT YET DECIDED]
-- Language: Unknown (Python and Node.js are common choices for scrapers)
-- HTTP client: Unknown (e.g., requests, httpx, axios, playwright)
-- Storage: Unknown (CSV, SQLite, PostgreSQL, MongoDB)
-- Testing: Unknown (pytest, jest, mocha)
+## Bekannte Architekturentscheide und Grenzen
 
-## Known Architecture Gaps
-- No source code exists yet.
-- No dependency management file.
-- No test infrastructure.
+- **Background Jobs:** Fire-and-forget im Request-Kontext (MVP). Kein BullMQ/Queue. Bei langen Jobs kann das Node-Timeout zuschlagen. Für SaaS-Erweiterung: pg-boss oder BullMQ nachrüsten.
+- **Kein Auth:** MVP ist lokal. Auth-Schicht kann über next-auth oder eigene Middleware später ergänzt werden.
+- **Rate Limiting:** Gelbe Seiten: 2s Delay pro Seite (konfigurierbar via SCRAPE_DELAY_MS). Overpass hat eingebautes Throttling.
+- **Playwright:** Installiert, aber noch kein aktiver Scraper nutzt es. Bereit für JS-gerenderte Quellen.

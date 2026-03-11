@@ -1,39 +1,67 @@
 # PROJECT_STATE.md
 
-## Project Purpose
-**Leads Scraper** — A tool for scraping and collecting business leads data.
-> [PLACEHOLDER] Exact data sources, target platforms, and output formats are not yet defined. Update this section once the project scope is confirmed.
+## Projektzweck
+**Leads Scraper** — Lokal nutzbares MVP eines B2B Lead Generators.
+Sammelt öffentlich auffindbare Unternehmensdaten (Firmenname, Website, E-Mail, Telefon, Adresse, Branche) anhand von Branche, Ort und Radius. Speichert strukturiert in PostgreSQL, stellt Vertriebsstatus und CSV/XLSX-Export bereit.
 
-## Current State
-- Repository initialized (empty). No source code exists yet.
-- Control files created for AI-driven development workflow.
-- No README, no build system, no dependencies defined.
+## Aktueller Stand (2026-03-11)
 
-## Key Modules / Areas
-> [PLACEHOLDER] Define once architecture decisions are made.
+**Phase 1 MVP: Code vollständig implementiert. Noch nicht produktiv getestet (Build + DB stehen aus).**
 
-| Module | Responsibility | Status |
-|--------|---------------|--------|
-| Scraper engine | Fetches raw lead data from sources | Not started |
-| Data parser | Normalizes and structures scraped data | Not started |
-| Storage layer | Persists leads (file/DB) | Not started |
-| CLI / interface | User-facing entry point | Not started |
+## Tech Stack
 
-## Completed Work
-- [2026-03-11] Git repository initialized on `main` branch.
-- [2026-03-11] AI agent control files created: AGENTS.md, PROJECT_STATE.md, TASK_QUEUE.md, ARCHITECTURE.md, SESSION_HANDOFF.md, .github/copilot-instructions.md.
-- [2026-03-11] `dev` branch created as default working branch.
+| Technologie | Version | Status |
+|-------------|---------|--------|
+| Next.js App Router | 16.1.6 | initialisiert |
+| TypeScript | 5.x | aktiv |
+| Tailwind CSS | 4.x | aktiv |
+| Prisma ORM | 7.x | Schema definiert, Migration ausstehend |
+| PostgreSQL | 16 | Docker Compose bereit, DB noch nicht gestartet |
+| Cheerio | 1.x | aktiv (Gelbe Seiten Scraper) |
+| Playwright | 1.x | installiert, noch kein aktiver Scraper |
+| ExcelJS | 4.x | aktiv (XLSX Export) |
+| csv-stringify | 6.x | aktiv (CSV Export) |
+| Zod | 4.x | aktiv (API Validation) |
 
-## Known Issues
-- No source code exists. The project has not started.
-- No README.md — this is a documentation gap.
-- No test suite defined.
-- No dependency management file (package.json / requirements.txt / etc.) — language/runtime not yet chosen.
+## Implementierte Module
 
-## Current Focus
-Define the project scope, choose the tech stack, and create the initial project skeleton.
+| Modul | Datei(en) | Status |
+|-------|-----------|--------|
+| Datenmodell | prisma/schema.prisma | fertig |
+| DB Client | lib/db.ts | fertig |
+| Overpass Scraper (OSM) | lib/scraper/sources/overpass.ts | fertig |
+| Gelbe Seiten Scraper | lib/scraper/sources/gelbeseiten.ts | fertig |
+| Job Orchestrator | lib/scraper/orchestrator.ts | fertig |
+| Deduplizierung | lib/scraper/deduplicator.ts | fertig |
+| Normalizer (Phone, URL, Email) | lib/parser/normalize.ts | fertig |
+| CSV Export | lib/export/csv.ts | fertig |
+| XLSX Export | lib/export/xlsx.ts | fertig |
+| API: Jobs CRUD | app/api/jobs/ | fertig |
+| API: Leads CRUD | app/api/leads/ | fertig |
+| API: Export | app/api/export/ | fertig |
+| UI: Dashboard / Lead-Liste | app/page.tsx | fertig |
+| UI: Suchmaske | app/search/page.tsx | fertig |
+| UI: Lead-Detailseite | app/leads/[id]/page.tsx | fertig |
+| UI: LeadsTable (responsive) | components/leads/LeadsTable.tsx | fertig |
+| UI: JobStatus mit Auto-Poll | components/leads/JobStatus.tsx | fertig |
+| Docker Setup | docker-compose.yml, Dockerfile | fertig |
 
-## Risks and Uncertainties
-- Target websites for scraping may have rate limits, CAPTCHAs, or ToS restrictions. Verify legality and compliance before implementation.
-- No secrets or credentials have been committed yet. Ensure a `.gitignore` with `.env` is created before adding any credentials.
-- Language/runtime not decided — do not make assumptions.
+## Abgeschlossene Arbeit
+
+- [2026-03-11] Repo + Git-Workflow initialisiert
+- [2026-03-11] .gitignore-Bug behoben: `*.json` hatte package.json/tsconfig.json ausgeschlossen
+- [2026-03-11] Vollständiger MVP-Stack implementiert (Session 2)
+
+## Bekannte Probleme / Lücken
+
+- Prisma Migration noch nicht ausgeführt — DB läuft noch nicht
+- `npm run build` noch nicht ausgeführt — TypeScript-Fehler möglich
+- Gelbe Seiten Selektoren heuristisch — können bei HTML-Änderungen brechen
+- Kein Test-Suite
+- Background Jobs laufen im Request-Kontext (fire-and-forget) — kein persistenter Queue
+
+## Aktuelle Risiken
+
+- Gelbe Seiten scraping: respektvoll und rate-limited, aber ToS im Auge behalten
+- OSM Datenlücken: kleine Unternehmen oft nicht in OpenStreetMap gepflegt
+- Noch nicht produktiv validiert — Build-Test ist zwingend nächster Schritt
