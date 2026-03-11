@@ -59,11 +59,10 @@
 ## Aktueller Repo-Stand
 
 - **Branch:** `dev`
-- **Relevante neue Commits:**
+- **Relevante neue Commits auf `dev`:**
   - `d935daf` - `fix: restore prisma build and next runtime path`
   - `fbd9f25` - `chore: add migration baseline and db workflow scripts`
-  - `0b078a2` - `fix: harden saas auth and ownership paths`
-  - `af2778b` - `fix: surface saas limits in ui and docs`
+  - Folge-Commits danach haerten SaaS-Auth/Ownership, surfacen Usage-/Limit-Feedback in der UI und halten den Handoff synchron
 - **Relevanter `main`-Stand:** `c1a2276`
 - **Status von `main`:** nicht freigegeben
 
