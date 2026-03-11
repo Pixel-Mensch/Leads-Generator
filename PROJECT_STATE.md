@@ -6,13 +6,15 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Release-Gates auf dem aktuellen `dev`-Worktree frisch verifiziert)
+## Aktueller Stand (2026-03-11, sauberer Release-Stand verifiziert und kontrolliert nach `main` promoted)
 
-**`dev` ist lokal startbar, demo-tauglich und als Release-Kandidat real verifiziert. Auf dem aktuellen lokalen `dev`-Worktree liefen `npm run db:generate`, `npm run lint`, `npm run build` und `npm run test:e2e:core` erneut erfolgreich. `main` wird in dieser Session trotzdem nicht automatisch promoted: technisch sind die Gates gruen, operativ blockieren aber ein nicht sauberer Worktree, fehlende CI und die weiterhin schmale Testbasis.**
+**`dev` und `main` zeigen jetzt auf denselben lokal verifizierten Release-Stand. Auf sauberem Worktree liefen `npm run db:generate`, `npm run db:migrate:status`, `npm run lint`, `npm run build` und `npm run test:e2e:core` erneut erfolgreich. Eine frische Migration war nicht noetig, weil `prisma migrate status` weiterhin `Database schema is up to date!` meldet. Restrisiken bleiben fehlende CI, schmale Testbasis und externe Scraper-Abhaengigkeiten.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
-- Aktive Phase: PHASE F Release-Haertung abgeschlossen; PHASE G Main-Promotion bleibt bis zu einem sauberen Worktree blockiert
-- 2026-03-11: Release-Gates auf dem aktuellen lokalen `dev`-Worktree erneut erfolgreich verifiziert (`db:generate`, `lint`, `build`, `test:e2e:core`)
+- Aktive Phase: PHASE G kontrollierte Promotion auf `main` abgeschlossen
+- 2026-03-11: Dirty Worktree bewusst aufgeloest; zwei lokale Dateien verworfen und vier sinnvolle UI-Politur-Dateien als Release-Verbesserung committed
+- 2026-03-11: Release-Gates auf sauberem lokalem `dev`-Worktree erneut erfolgreich verifiziert (`db:generate`, `db:migrate:status`, `lint`, `build`, `test:e2e:core`)
+- 2026-03-11: Verifizierter `dev`-Stand kontrolliert nach `main` promoted
 - `npm run db:generate` laeuft wieder
 - `docker compose up db -d` wurde erfolgreich gegen Docker Desktop ausgefuehrt; der `db`-Container ist healthy
 - `npm run db:migrate` wurde erfolgreich gegen die laufende lokale Postgres-DB ausgefuehrt
@@ -55,6 +57,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - Lead-Tabelle bietet jetzt klarere Kontakt-Schnellaktionen, sichtbare Follow-up-Signale und robustere Inline-Fehler fuer Status-/Notiz-Aenderungen
 - Lead-Detailseite bietet jetzt echte Vertriebs-Schnellaktionen, Kontakt-/Follow-up-Zusammenfassung und Ruecksprung in den zugehoerigen Suchlauf
 - Mobile Top-Navigation und User-Bereich umbrechen jetzt sauberer statt auf schmalen Screens zu klemmen
+- Projekt-Detailseite zeigt jetzt sauberere Lade-/Leere-Zustaende, KPI-Karten und klarere Job-/Listen-Darstellung fuer Demo und Alltag
 
 ## Tech Stack
 
@@ -120,7 +123,6 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 ## Bekannte Probleme / Luecken
 
 - **Keine breite Test-Suite** - ein Playwright-Kernworkflow-Smoke-Test ist vorhanden, aber keine Unit- oder Integrations-Tests
-- **Worktree fuer `main` aktuell nicht sauber** - lokale uncommitted Aenderungen in `AGENTS.md`, `.claude/settings.local.json`, `app/layout.tsx`, `app/globals.css`, `app/projects/[id]/page.tsx` und `components/NavUser.tsx` verhindern eine kontrollierte Promotion
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Overpass bleibt extern flakey** - Retry-Haertung ist eingebaut, aber die Quelle kann weiterhin `504` oder Timeouts liefern
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
@@ -137,4 +139,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - next-auth v5 beta kann noch API-Aenderungen haben
 - Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` sollte nur kontrolliert aus einem sauberen `dev`-Stand aktualisiert werden; auf dem aktuellen Rechner blockieren lokale uncommitted Aenderungen diesen Schritt weiterhin
+- Weitere Aenderungen muessen wieder auf `dev` beginnen; `main` soll nur erneut aus einem sauberen, verifizierten `dev`-Stand aktualisiert werden

@@ -6,8 +6,9 @@ Repository-Name: `Leads-Scraper`
 
 ## Release-Einschaetzung (2026-03-11)
 
-- `dev` ist aktuell demo-tauglich, screenshot-faehig und als erster Release-Kandidat vertretbar
-- `main` wurde bewusst nicht automatisch aktualisiert; technisch ist der Stand freigabefaehig, operativ blockieren aber aktuell ein nicht sauberer Worktree, fehlende CI und breitere Regressionstests
+- `dev` ist aktuell demo-tauglich, screenshot-faehig und lokal verifiziert
+- `main` wurde in dieser Session kontrolliert auf denselben Release-Stand aktualisiert
+- Der Stand ist fuer erste Demo und lokale Veroeffentlichung glaubwuerdig, mit ehrlichen Restrisiken bei CI, Testbreite und externen Scraper-Quellen
 - Overpass und Gelbe Seiten wurden beide live gegen laufende lokale Dienste verifiziert
 
 ## Aktueller Verifikationsstand
@@ -18,6 +19,7 @@ Repository-Name: `Leads-Scraper`
 - `npm run db:migrate:status` meldet `Database schema is up to date`
 - `npm run lint` laeuft
 - `npm run build` laeuft
+- `git status --short` war vor der Promotion leer
 - `npm run test:e2e:core` wurde auf dem aktuellen `dev`-Worktree erneut erfolgreich ausgefuehrt
 - Dev-Server-Boot wurde lokal geprueft: `GET /login -> HTTP 200`
 - Protected-Route-Redirect wurde lokal geprueft: `GET /projects -> 307 /login?...`
@@ -262,6 +264,8 @@ Zusaetzlich erforderlich:
 - Smoke-Test fuer Register, Login, Projekt, Suche und Export
 - Bei Scraper-Aenderungen mindestens einen Live-Job pro angefasster Quelle pruefen
 - `git status --short` muss vor der Promotion leer sein
+
+Der aktuelle `main`-Stand erfuellt diese Bedingungen fuer den am 2026-03-11 verifizierten Release-Commit.
 
 ## Smoke-Test-Checkliste
 

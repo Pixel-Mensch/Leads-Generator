@@ -1,6 +1,6 @@
 # ARCHITECTURE.md
 
-> Stand: 2026-03-11 - `dev` lokal startbar und mit Overpass + Gelbe Seiten live verifiziert, `main` noch nicht promoted
+> Stand: 2026-03-11 - `dev` lokal startbar und mit Overpass + Gelbe Seiten live verifiziert; `main` wurde kontrolliert auf denselben Release-Stand aktualisiert
 
 ## High-Level Struktur
 
@@ -189,3 +189,4 @@ API-Schutz:
 - Dashboard, KPI und Export sollen denselben serverseitigen Lead-Filterkontext verwenden; gemeinsame Helfer liegen in `lib/leads/filters.ts`
 - Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und ein bestandener Kernworkflow-Smoke-Test; bei Scraper-Aenderungen zusaetzlich mindestens ein Live-Check pro betroffener Quelle
 - Promotion nach `main` nur aus einem sauberen Worktree (`git status --short` leer), damit ein freigegebener Release-Stand eindeutig einem verifizierten Commit entspricht
+- Der aktuelle stabile Basisstand auf `main` ist der am 2026-03-11 auf sauberem Worktree verifizierte `dev`-Release-Stand

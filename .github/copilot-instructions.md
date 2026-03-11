@@ -39,6 +39,7 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - Feature-Branches von `dev` abzweigen: `feat/`, `fix/`, `chore/`
 - Kein Merge nach `main` ohne erfolgreiches `npm run db:generate`, `npm run build`, `npm run lint`, Live-Migration, Smoke-Test und Handoff-Update
 - Kein Merge oder Fast-Forward nach `main`, solange `git status --short` lokale uncommitted Aenderungen zeigt
+- Der aktuelle stabile Basisstand wurde am 2026-03-11 kontrolliert nach `main` promoted; weitere Aenderungen beginnen wieder auf `dev`
 
 ## Lokaler Minimalstart
 - `.env.example` nach `.env` kopieren
