@@ -25,6 +25,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - Authentifizierte Seiten `/`, `/projects` und `/search` liefern mit Session `HTTP 200`
 - Ein vollstaendiger Browser-E2E-Kernflow wurde erfolgreich durchlaufen: Register -> Login -> Projekt anlegen -> Suche -> Leads -> Detailseite -> Statuswechsel -> Export
 - Ein reproduzierbarer Playwright-Smoke-Test fuer genau diesen Kernworkflow liegt jetzt in `tests/e2e/core-workflow.spec.ts`
+- `npm run test:e2e:core` startet die App jetzt selbst ueber Playwright `webServer` statt einen manuell laufenden Dev-Server vorauszusetzen
 - Ein echter Overpass-Job lief lokal auf `COMPLETED` und speicherte 50 Leads
 - CSV- und XLSX-Export wurden lokal mit echtem Job/Lead-Bestand auf `HTTP 200` verifiziert
 - Login-, Register- und Suchformulare besitzen jetzt saubere Label-zu-Input-Verknuepfungen; Projekt- und Listenanlage wurden fuer Browser- und Accessibility-Nutzung mit `aria-label` nachgeschaerft

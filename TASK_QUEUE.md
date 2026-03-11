@@ -36,6 +36,7 @@
 - [2026-03-11] Vollstaendiger Browser-E2E-Kernflow erfolgreich durchlaufen: Register, Login, Projektanlage, Overpass-Suche, Lead-Detailseite, Statuswechsel und gefilterter CSV/XLSX-Export
 - [2026-03-11] Kernflow-Formulare fuer echte Browser- und Accessibility-Nutzung gehaertet (`htmlFor`/`id`, `aria-label`)
 - [2026-03-11] Playwright-Smoke-Test fuer den Kernworkflow angelegt und lokal gruen ausgefuehrt (`npm run test:e2e:core`)
+- [2026-03-11] Playwright-Smoke-Test startet die App jetzt selbst ueber `webServer`; kein manuell laufender Dev-Server mehr noetig
 
 ---
 

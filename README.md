@@ -201,7 +201,10 @@ Voraussetzungen:
 
 - Docker-DB laeuft
 - `.env` ist gesetzt
-- die App laeuft lokal auf `http://localhost:3000`
+
+Hinweis:
+
+- `npm run test:e2e:core` startet die lokale App ueber Playwright `webServer` selbst auf `http://localhost:3000`
 
 Der Test deckt ab:
 
@@ -249,6 +252,7 @@ Zusaetzlich erforderlich:
 - Prisma Client nicht generiert: `npm run db:generate` ausfuehren.
 - Migration nicht angewendet: `npm run db:migrate` und danach optional `npm run db:migrate:status`.
 - Playwright-Browser fehlt: `npx playwright install chromium` ausfuehren.
+- Playwright-Smoke startet nicht: pruefen, ob `docker compose up db -d` laeuft; die App wird vom Test selbst gestartet, die DB nicht.
 
 ## Docker
 

@@ -42,6 +42,7 @@
 - `playwright.config.ts` und `tests/e2e/core-workflow.spec.ts` angelegt
 - `npm run test:e2e:core` in `package.json` hinterlegt
 - `.gitignore` um `playwright-report/` und `test-results/` erweitert
+- Playwright startet die App fuer `npm run test:e2e:core` jetzt selbst ueber `webServer`
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -75,6 +76,7 @@
 - Overpass-Smoke -> echter Job auf `COMPLETED`, 50 Leads gespeichert
 - Browser-E2E-Smoke -> Register, Login, Projektanlage, Suche, Lead-Detailseite, Statuswechsel und gefilterte Exporte erfolgreich
 - `npm run test:e2e:core` -> erfolgreich
+- `npm run test:e2e:core` ohne manuell gestartete App -> erfolgreich
 - Export-Smoke -> `/api/export/csv` und `/api/export/xlsx` liefern `HTTP 200` gegen den echten Job-Bestand
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
