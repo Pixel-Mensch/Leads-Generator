@@ -10,27 +10,31 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 
 ## Stack und Konventionen
 - TypeScript, Next.js 16 App Router, Tailwind CSS 4
-- Prisma 7 + PostgreSQL - Typen immer aus `@prisma/client`
-- API-Validierung mit Zod - immer `.safeParse()` verwenden
-- Alle DB-Zugriffe ueber `lib/db.ts` (Prisma Singleton)
+- Prisma 7 mit `prisma.config.ts`
+- Runtime-DB-Zugriff ueber `@prisma/adapter-pg` und `pg`
+- Typen immer aus `@prisma/client`
+- API-Validierung mit Zod und `.safeParse()`
+- Alle DB-Zugriffe ueber `lib/db.ts`
 - Scraper-Quellen in `lib/scraper/sources/`, Orchestrierung in `lib/scraper/orchestrator.ts`
 
 ## Auth und Ownership
-- next-auth v5 beta mit JWT-Strategie - kein Session-Table
+- next-auth v5 beta mit JWT-Strategie
+- Schutzpfad laeuft ueber `proxy.ts`
 - Jede API-Route startet mit `const { session, error } = await requireAuth()` aus `lib/session.ts`
-- Alle DB-Queries filtern per `userId: session.user.id` - niemals ohne User-Scope
-- Ownership-Verletzungen -> 404 zurueckgeben, nicht 403
+- Alle DB-Queries filtern per `userId: session.user.id`
+- Ownership-Verletzungen -> 404 statt 403
 - Plan-Limits pruefen mit `checkJobLimit()` / `checkProjectLimit()` aus `lib/limits.ts`
 
 ## Projekt-Modell
-- Projects haben Soft Delete: `where: { deletedAt: null }` bei allen Listabfragen
+- Projects haben Soft Delete: `where: { deletedAt: null }`
 - Ressourcen-Kette: User -> Project -> (LeadList, SearchJob) -> Lead
-- SearchJob.userId und SearchJob.projectId sind nullable (Rueckwaertskompatibilitaet)
+- SearchJob.userId und SearchJob.projectId sind nullable
+- Initial-Migration liegt in `prisma/migrations/20260311081500_init`
 
 ## Branch-Praeferenz
 - `dev` ist der Standard-Arbeitsbranch
 - Feature-Branches von `dev` abzweigen: `feat/`, `fix/`, `chore/`
-- Kein Merge nach `main` ohne erfolgreiches `npm run db:generate`, `npm run build`, `npm run lint` und Handoff-Update
+- Kein Merge nach `main` ohne erfolgreiches `npm run db:generate`, `npm run build`, `npm run lint`, Live-Migration, Smoke-Test und Handoff-Update
 
 ## Aenderungsdisziplin
 - Kleine, fokussierte Aenderungen - ein Concern pro Commit
@@ -40,12 +44,14 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 ## Dokumentation
 - Nach jeder bedeutsamen Aenderung: PROJECT_STATE.md, TASK_QUEUE.md, SESSION_HANDOFF.md aktualisieren
 - ARCHITECTURE.md aktualisieren, wenn sich Struktur oder Release-Gates aendern
+- README aktuell halten, wenn sich Startpfad, Scripts oder Setup aendern
 
 ## Sicherheit
 - Nie Secrets, API-Keys oder Credentials committen
-- AUTH_SECRET immer aus `.env` - `openssl rand -base64 32` zum Generieren
-- Immer Umgebungsvariablen nutzen - `.env` ist in `.gitignore`
+- `AUTH_SECRET` immer aus `.env`
+- `.env` ist lokal erlaubt, aber nie committen
 
 ## Testing
 - Vor Commit `npm run db:generate && npm run build && npm run lint` ausfuehren
+- Fuer Release-Kandidaten zusaetzlich Live-Migration und manuellen Smoke-Test ausfuehren
 - Fehlende Tests in PROJECT_STATE.md dokumentieren
