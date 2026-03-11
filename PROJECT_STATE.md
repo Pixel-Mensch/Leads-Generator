@@ -1,14 +1,14 @@
 # PROJECT_STATE.md
 
 ## Projektzweck
-**Leads Scraper** - B2B Lead Generator mit SaaS-faehiger Architektur.
+**Leads Generator** (Repository: `Leads-Scraper`) - B2B Lead Generator mit SaaS-faehiger Architektur.
 Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, lokaler E2E-Kernworkflow real verifiziert)
+## Aktueller Stand (2026-03-11, lokaler Release-/Demo-Check real verifiziert)
 
-**`dev` ist jetzt lokal real startbar, der Kernworkflow wurde im Browser voll durchlaufen und als Playwright-Smoke-Test abgelegt. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offenes Restrisiko bleibt vor allem der fehlende frische Gelbe-Seiten-Live-Smoke-Test.**
+**`dev` ist lokal startbar, demo-tauglich und als Release-Kandidat real verifiziert. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, ein frischer Gelbe-Seiten-Live-Job, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; technisch ist der Stand freigabefaehig, operativ bleiben aber die fehlende CI und die schmale Testbasis als ehrliche Restrisiken.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
 - `npm run db:generate` laeuft wieder
@@ -27,8 +27,11 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - Ein reproduzierbarer Playwright-Smoke-Test fuer genau diesen Kernworkflow liegt jetzt in `tests/e2e/core-workflow.spec.ts`
 - `npm run test:e2e:core` startet die App jetzt selbst ueber Playwright `webServer` statt einen manuell laufenden Dev-Server vorauszusetzen
 - Ein echter Overpass-Job lief lokal auf `COMPLETED` und speicherte 50 Leads
+- Ein echter Gelbe-Seiten-Job lief lokal auf `COMPLETED` und speicherte 46 Leads
 - CSV- und XLSX-Export wurden lokal mit echtem Job/Lead-Bestand auf `HTTP 200` verifiziert
+- CSV- und XLSX-Export wurden zusaetzlich gegen den frischen Gelbe-Seiten-Job erfolgreich heruntergeladen
 - Login-, Register- und Suchformulare besitzen jetzt saubere Label-zu-Input-Verknuepfungen; Projekt- und Listenanlage wurden fuer Browser- und Accessibility-Nutzung mit `aria-label` nachgeschaerft
+- Login, Registrierung sowie Projekt-/Such-Metadaten liefern jetzt klarere Fehler- und Retry-Hinweise statt still in irrefuehrende Leerzustaende zu kippen
 - `requireAuth()` holt den aktuellen User-Status jetzt authoritativ aus der DB
 - Ownership fuer Lead-Listen-Zuordnung wird jetzt projektbezogen serverseitig validiert
 - Listen-Limits werden serverseitig erzwungen und in der UI sichtbar gemacht
@@ -38,11 +41,14 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - `normalizeUrl()` behandelt Schemes, Tracking-Parameter und Nicht-HTTP-Links jetzt sauberer
 - Dedup-Merge fuellt nicht nur Luecken, sondern behaelt reichere Kontaktfelder und kombiniert Quellen nachvollziehbar
 - Overpass-Fallback escaped Freitext sauberer und DB-Dedup gegen vorhandene Leads nutzt jetzt normalisierte Name+Ort-Keys
+- Overpass-Runs retryen jetzt transiente `429`-/`5xx`- und Timeout-Fehler, um Demo- und Smoke-Flakes spuerbar zu reduzieren
 - Gelbe-Seiten-Parsing wurde gegen reales Live-HTML validiert und nutzt jetzt eingebettete Kontaktdaten, Base64-Website-Links und robustere Detail-URL-/Adress-Selektoren
 - CSV- und XLSX-Exporte ziehen jetzt `listId`, `tag`, `category` und `sourceName` als Filter sauber durch
 - Exporte enthalten jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer nachvollziehbarere Lead-Qualitaet
+- Quellen werden in UI und Export jetzt mit lesbaren Labels statt internen Rohwerten angezeigt
 - `sourceName`-Filter matchen jetzt auch deduplizierte Multi-Source-Leads in Dashboard und Export
 - Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende und filterkonsistente KPI-/Export-Kontexte
+- CSV/XLSX-Aktionen bleiben im Dashboard sichtbar, sind ohne sichtbare Leads aber bewusst deaktiviert statt leere Dateien zu erzeugen
 - Job-Statusbanner pollt jetzt bis zu einem terminalen Job-Status statt nach dem ersten Laden zu veralten
 - Lead-Tabelle bietet jetzt klarere Kontakt-Schnellaktionen, sichtbare Follow-up-Signale und robustere Inline-Fehler fuer Status-/Notiz-Aenderungen
 - Lead-Detailseite bietet jetzt echte Vertriebs-Schnellaktionen, Kontakt-/Follow-up-Zusammenfassung und Ruecksprung in den zugehoerigen Suchlauf
@@ -112,8 +118,8 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 ## Bekannte Probleme / Luecken
 
 - **Keine breite Test-Suite** - ein Playwright-Kernworkflow-Smoke-Test ist vorhanden, aber keine Unit- oder Integrations-Tests
-- **Gelbe Seiten in dieser Session nicht live als kompletter Job erneut verifiziert** - der lokale Such-Smoke lief ueber Overpass
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
+- **Overpass bleibt extern flakey** - Retry-Haertung ist eingebaut, aber die Quelle kann weiterhin `504` oder Timeouts liefern
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
 - **Dashboard-Filter nicht breit regressionsgesichert** - Kernpfad und Statusfilter wurden im Browser verifiziert, aber nicht alle Filterkombinationen
@@ -128,4 +134,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - next-auth v5 beta kann noch API-Aenderungen haben
 - Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise nach einem zusaetzlichen Gelbe-Seiten-Smoke aktualisiert werden
+- `main` sollte nur kontrolliert aus einem sauberen `dev`-Stand aktualisiert werden; technisch ist die Freigabe jetzt vertretbar, organisatorisch fehlt aber weiterhin CI

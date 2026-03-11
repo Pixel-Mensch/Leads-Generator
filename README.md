@@ -1,6 +1,14 @@
-# Leads Scraper
+# Leads Generator
 
 B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CRM-artigem Lead-Workflow und CSV/XLSX-Export.
+
+Repository-Name: `Leads-Scraper`
+
+## Release-Einschaetzung (2026-03-11)
+
+- `dev` ist aktuell demo-tauglich, screenshot-faehig und als erster Release-Kandidat vertretbar
+- `main` wurde bewusst nicht automatisch aktualisiert; technisch ist der Stand freigabefaehig, operativ fehlen aber weiterhin CI und breitere Regressionstests
+- Overpass und Gelbe Seiten wurden beide live gegen laufende lokale Dienste verifiziert
 
 ## Aktueller Verifikationsstand
 
@@ -16,11 +24,14 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - Kernflow wurde lokal geprueft: authentifizierte Seiten `GET / -> 200`, `GET /projects -> 200`, `GET /search -> 200`
 - Vollstaendiger Browser-E2E-Kernflow wurde lokal geprueft: Register -> Login -> Projekt anlegen -> Suche starten -> Leads anzeigen -> Lead-Detail -> Statuswechsel -> CSV/XLSX Export
 - Overpass-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 50 Leads
+- Gelbe-Seiten-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 46 Leads
 - CSV- und XLSX-Export wurden lokal geprueft: beide Routen antworteten mit `HTTP 200` gegen echte Lead-Daten
+- CSV- und XLSX-Export wurden zusaetzlich gegen den frischen Gelbe-Seiten-Job real heruntergeladen
 - Reproduzierbarer Playwright-Smoke-Test fuer den Kernworkflow ist vorhanden und lief lokal gruen
 - `docker compose config` ist valide
 - Eine Initial-Migration liegt in `prisma/migrations/20260311081500_init`
 - Zentrale Formulare im Kernflow wurden fuer echte Browser- und Accessibility-Nutzung nachgeschaerft: Labels sind jetzt programmatisch mit Inputs verknuepft
+- Overpass retryt jetzt transiente `504`-/Timeout-Fehler, um Demo- und Smoke-Flakes zu reduzieren
 
 ## Funktionsumfang
 
@@ -217,6 +228,22 @@ Der Test deckt ab:
 - gefilterten CSV-Export
 - gefilterten XLSX-Export
 
+## Demo-Ablauf
+
+Ein kurzer lokaler Ablauf fuer Demo, Screenshots oder Verkaufsgespraech:
+
+1. `docker compose up db -d`
+2. `npm run db:generate`
+3. `npm run db:migrate`
+4. `npm run dev`
+5. Im Browser: registrieren, Projekt anlegen, Suche starten, Status im Dashboard setzen, Lead-Detail aufrufen, CSV/XLSX exportieren
+
+Empfohlener Demo-Pfad:
+
+- Overpass fuer einen schnellen, ToS-konformen Standardlauf
+- Gelbe Seiten als zweiter Quellennachweis, wenn der Demo-Fokus auf deutschen Branchenverzeichnissen liegt
+- Dashboard-Filter und Export nur mit sichtbaren Leads demonstrieren; leere Exporte werden bewusst deaktiviert
+
 ## Release-Check
 
 Vor einer Promotion nach `main` muessen mindestens diese Befehle gruen sein:
@@ -232,6 +259,7 @@ Zusaetzlich erforderlich:
 - Postgres starten
 - `npm run db:migrate` erfolgreich ausfuehren
 - Smoke-Test fuer Register, Login, Projekt, Suche und Export
+- Bei Scraper-Aenderungen mindestens einen Live-Job pro angefasster Quelle pruefen
 
 ## Smoke-Test-Checkliste
 
@@ -263,6 +291,6 @@ Zusaetzlich erforderlich:
 ## Bekannte Luecken
 
 - Keine breite Test-Suite; aktuell nur ein schlanker Playwright-Kernworkflow-Smoke-Test
-- Gelbe-Seiten-Suche wurde in dieser Session nicht erneut live bis zum Ende durchlaufen
+- Overpass ist trotz Retry weiterhin von einer externen API mit gelegentlichen `504`-/Timeout-Flakes abhaengig
 - Gelbe-Seiten-Selektoren wurden gegen Live-HTML validiert, bleiben aber extern aenderungsanfaellig
 - Kein CI/CD-Setup

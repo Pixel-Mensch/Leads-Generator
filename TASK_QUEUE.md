@@ -37,20 +37,19 @@
 - [2026-03-11] Kernflow-Formulare fuer echte Browser- und Accessibility-Nutzung gehaertet (`htmlFor`/`id`, `aria-label`)
 - [2026-03-11] Playwright-Smoke-Test fuer den Kernworkflow angelegt und lokal gruen ausgefuehrt (`npm run test:e2e:core`)
 - [2026-03-11] Playwright-Smoke-Test startet die App jetzt selbst ueber `webServer`; kein manuell laufender Dev-Server mehr noetig
+- [2026-03-11] Gelbe-Seiten-Quelle als echter lokaler Job smoke-getestet; 46 Leads gespeichert und CSV/XLSX-Export dagegen verifiziert
+- [2026-03-11] Release-Haertung fuer Demo/UI umgesetzt: klare Retry-/Fehlerhinweise in Auth, Projekten und Suche; lesbare Quellenlabels; leere Exporte im Dashboard deaktiviert
+- [2026-03-11] Overpass gegen transiente `504`-/Timeout-Flakes mit Retry-Logik gehaertet; Playwright-Kernworkflow danach wieder gruen
+- [2026-03-11] Release-Entscheidung dokumentiert: `dev` ist main-faehiger Kandidat, Promotion aber bewusst nicht automatisch ausgefuehrt
 
 ---
 
 ## Aktive Aufgaben
 
-### [P1] Gelbe-Seiten-Quelle erneut als echter Job smoke-testen
-- **Status:** TODO
-- **Problem:** In dieser Session wurde nur der Overpass-Pfad als kompletter Suchlauf mit echter DB verifiziert
-- **Erwartetes Ergebnis:** `source=gelbeseiten` oder `source=both` laeuft ebenfalls nachvollziehbar durch
-
-### [P1] Release-Entscheidung fuer `main` auf Basis des jetzt verifizierten Lokalstarts treffen
-- **Status:** TODO
-- **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und lokaler Browser-Kernflow sind gruen; Gelbe-Seiten-Smoke klaert das Restrisiko
-- **Erwartetes Ergebnis:** dokumentiertes Ja/Nein fuer Promotion nach `main`
+### [P2] Kontrollierte Promotion von `dev` nach `main` in sauberem Worktree vorbereiten
+- **Status:** READY, in dieser Session bewusst nicht automatisch ausgefuehrt
+- **Problem:** Der technische Release-Kandidat ist verifiziert, aber es fehlt weiterhin CI und der lokale Worktree ist nicht vollstaendig clean
+- **Erwartetes Ergebnis:** bewusstes Ja/Nein fuer die finale Branch-Aktualisierung, statt einer stillen Auto-Promotion
 
 ### [P2] Session-Freshness bei Plan- oder Statuswechsel pruefen
 - **Status:** TODO
@@ -80,7 +79,7 @@
 ### [P3] Playwright-Smoke-Test auf weitere Filter- und Fehlerfaelle erweitern
 - **Status:** TODO
 - **Datei:** `tests/e2e/core-workflow.spec.ts`
-- **Erwartetes Ergebnis:** mehr Abdeckung fuer Follow-up, Bulk-Status und Fehlerzustaende
+- **Erwartetes Ergebnis:** mehr Abdeckung fuer Follow-up, Bulk-Status, Fehlerzustaende und externe Source-Fallbacks
 
 ### [P3] Playwright-Scraper fuer JS-gerenderte Quellen
 - **Status:** TODO

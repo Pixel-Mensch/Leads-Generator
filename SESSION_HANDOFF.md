@@ -1,141 +1,91 @@
 # SESSION_HANDOFF.md
 
-## Stabilisierungssession (2026-03-11)
+## Release-Hardening Session (2026-03-11)
 
 ### Ergebnis
 
-**`dev` ist jetzt lokal real startbar, der Kernworkflow wurde im Browser voll durchlaufen und liegt als Playwright-Smoke-Test vor. Docker-Postgres, Prisma-Migration, Register/Login, Projektanlage, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads, Lead-Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
+**`dev` ist jetzt lokal startbar, demo-tauglich und als kontrollierter Release-Kandidat vertretbar. Der Kernworkflow wurde erneut im Browser geprueft, ein frischer Gelbe-Seiten-Live-Job lief erfolgreich durch, CSV/XLSX-Exporte wurden gegen echte Daten beider Quellpfade verifiziert, und die letzten produktnahen Demo-/Fehlerkanten wurden nachgeschaerft. `main` wurde trotzdem nicht automatisch aktualisiert.**
 
 ### Was umgesetzt wurde
 
-**Tooling und Runtime:**
-- Prisma 7 auf `prisma.config.ts` umgestellt
-- Runtime auf `@prisma/adapter-pg` + `pg` angepasst
-- Next.js 16 von `middleware.ts` auf `proxy.ts` umgestellt
-- Dockerfile fuer Build-Zeit-Env abgesichert
+**Produkt- und UX-Haertung:**
+- Auth-Formulare liefern jetzt auch bei Netzwerk- oder Provider-Problemen saubere Fehlermeldungen statt still haengen zu bleiben
+- Projekt- und Such-Metadaten zeigen jetzt Retry-/Warnhinweise, wenn `/api/projects` oder `/api/me` temporaer nicht verfuegbar sind
+- Dashboard-Exporte bleiben fuer Demo und Alltag sichtbar, sind ohne sichtbare Leads aber bewusst deaktiviert
+- Quellen werden in Lead-Tabelle, Lead-Detail, Job-Status und Exporten mit lesbaren Labels angezeigt (`OpenStreetMap`, `Gelbe Seiten`) statt mit Rohwerten
+- Suchradius wird im Suchformular robuster validiert und nicht mehr still zu `NaN`
+- Overpass retryt jetzt transiente `429`-/`5xx`- und Timeout-Fehler, um externe Demo-/Smoke-Flakes zu reduzieren
 
-**Code-Fixes:**
-- React-Lint-Fehler in `app/page.tsx` und `app/projects/page.tsx` behoben
-- XLSX-Export-Rueckgabe fuer `NextResponse` typkorrigiert
-- `requireAuth()` liest User-Status jetzt aus der DB statt nur aus dem JWT
-- Login und Registrierung normalisieren E-Mail-Adressen
-- Listen-Limits werden serverseitig erzwungen
-- Lead-Listen-Zuordnung ist auf das eigene Projekt begrenzt
-- Job-Starts sind nur noch aus `PENDING` moeglich
-- Scraper respektiert echte Plan-Limits fuer Leads pro Job
-- Protected Pages leiten jetzt real auf `/login` um
-- Search-/Project-UI zeigen Limit- und Fehlerfeedback
-- URL-, Firmennamen- und Vergleichsnormalisierung wurden fuer reale Konfliktfaelle gehaertet
-- Dedup-Merge behaelt reichere Kontaktfelder, kombiniert Quellen nachvollziehbar und aktualisiert Schluessel nach Merges korrekt
-- Overpass-Freitext-Fallback escaped Regex sauberer, und DB-Dedup nutzt jetzt normalisierte Name+Ort-Keys
-- Gelbe-Seiten-Scraper wurde gegen reales Live-HTML validiert und liest jetzt Base64-Website-Links, eingebettete JSON-Kontaktdaten, robustere Detail-URLs und kompakte Adressbloecke
-- CSV- und XLSX-Exporte uebernehmen jetzt `listId`, `tag`, `category` und `sourceName` konsistent als Filter
-- Exporte zeigen jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer bessere Nachvollziehbarkeit
-- `sourceName`-Filter in Lead- und Export-APIs matchen jetzt auch kombinierte deduplizierte Quellenwerte
-- Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende, bessere Paginationsnavigation und filterkonsistente KPI-/Export-Kontexte
-- `JobStatus` pollt jetzt bis zum terminalen Status und veraltet nicht mehr nach dem ersten Laden
-- Lead-Tabelle zeigt jetzt klarere Kontakt-Schnellaktionen, Follow-up-Badges und bessere Inline-Fehler fuer Status-/Notiz-Aenderungen
-- Lead-Detailseite hat jetzt Vertriebs-Schnellaktionen (`kontaktiert`, `Follow-up morgen`, Kontakt-/Quelllinks) und einen Ruecksprung in den Suchlauf
-- Top-Navigation und User-Bereich umbrechen auf Mobile sauberer
-- Login-, Register- und Suchformulare verknuepfen Labels jetzt korrekt mit Inputs
-- Projekt- und Listenanlage wurden mit `aria-label` fuer stabile Browser- und Accessibility-Nutzung nachgeschaerft
-- `playwright.config.ts` und `tests/e2e/core-workflow.spec.ts` angelegt
-- `npm run test:e2e:core` in `package.json` hinterlegt
-- `.gitignore` um `playwright-report/` und `test-results/` erweitert
-- Playwright startet die App fuer `npm run test:e2e:core` jetzt selbst ueber `webServer`
+**Release- und Demo-Verifikation:**
+- Ein echter Gelbe-Seiten-Job wurde lokal durchlaufen und speicherte 46 Leads
+- CSV- und XLSX-Export wurden zusaetzlich gegen diesen Gelbe-Seiten-Job erfolgreich heruntergeladen
+- `npm run lint`, `npm run build` und `npm run test:e2e:core` wurden nach den Aenderungen erneut erfolgreich ausgefuehrt
+- Ein initialer E2E-Rerun zeigte einen echten Overpass-`504`-/Timeout-Flake; daraus wurde direkt die Retry-Haertung fuer den Produktpfad abgeleitet und erneut verifiziert
 
-**DB / Ops:**
-- Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
-- `migration_lock.toml` angelegt
-- `db:migrate:deploy` und `db:migrate:status` in `package.json` ergaenzt
-- Compose-Warnung bereinigt (`version` entfernt)
-- `.env.example` auf echten globalen Scrape-Cap gebracht
-- Docker Desktop lokal gestartet und `docker compose up db -d` erfolgreich ausgefuehrt
-- `npm run db:migrate` erfolgreich gegen die lokale Docker-Postgres-DB ausgefuehrt
-- `npm run db:migrate:status` meldet `Database schema is up to date`
-
-**Doku:**
-- README auf echten Stack, echte SaaS-Schutzpfade und echten Startpfad gebracht
-- PROJECT_STATE, TASK_QUEUE, ARCHITECTURE und Copilot-Instruktionen synchronisiert
+**Doku und Release-Klarheit:**
+- README auf echten Demo-/Release-Stand gebracht, inklusive Demo-Ablauf und ehrlicher Release-Einschaetzung
+- PROJECT_STATE, TASK_QUEUE und ARCHITECTURE mit dem realen Verifikationsstand synchronisiert
+- Release-Urteil festgehalten: `dev` ist main-faehiger Kandidat, aber `main` bleibt ohne explizite Freigabe und sauberen Worktree unangetastet
 
 ### Reale Verifikation
 
-- `npm run db:generate` -> erfolgreich
 - `docker compose up db -d` -> erfolgreich, `db`-Container healthy auf `localhost:5432`
-- `npm run db:migrate` -> erfolgreich
-- `npm run db:migrate:status` -> erfolgreich
+- `npm run db:migrate` -> erfolgreich gegen lokale Docker-Postgres-DB
 - `npm run lint` -> erfolgreich
 - `npm run build` -> erfolgreich
-- `docker compose config` -> erfolgreich
-- Dev-Boot-Test -> `GET /login` lieferte `HTTP 200`
-- Protected-Route-Test -> `GET /projects` lieferte `307 -> /login?...`
-- Register-Smoke -> `POST /api/register` erfolgreich, Default-Projekt automatisch angelegt
-- Login-Smoke -> Auth.js Credentials-Login erfolgreich, `/api/auth/session` liefert Session
-- Auth-API-Smoke -> `/api/me` und `/api/projects` erfolgreich gegen echte Session
-- Authentifizierte Seiten -> `/`, `/projects` und `/search` liefern `HTTP 200`
-- Overpass-Smoke -> echter Job auf `COMPLETED`, 50 Leads gespeichert
-- Browser-E2E-Smoke -> Register, Login, Projektanlage, Suche, Lead-Detailseite, Statuswechsel und gefilterte Exporte erfolgreich
 - `npm run test:e2e:core` -> erfolgreich
-- `npm run test:e2e:core` ohne manuell gestartete App -> erfolgreich
-- Export-Smoke -> `/api/export/csv` und `/api/export/xlsx` liefern `HTTP 200` gegen den echten Job-Bestand
-- Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
-- Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
-- Neue Dashboard-Filterlogik (`q`, `followUp`) sowie Export-/Stats-Pfade sind build-, lint- und Prisma-generate-verifiziert
-- Lead-Tabelle, Detailseite und Navigation sind build-, lint- und Prisma-generate-verifiziert
+- Browser-Smoke mit frischem Demo-User -> Register, Login, Projektanlage, Suche, Lead-Detail, Statuswechsel und Export erfolgreich
+- Gelbe-Seiten-Live-Smoke -> `restaurant` in `Berlin`, Status `COMPLETED`, 46 gespeicherte Leads
+- Gelbe-Seiten-Export-Smoke -> CSV und XLSX gegen den verifizierten Gelbe-Seiten-Job heruntergeladen
+- Mobile/Präsentationscheck -> Search- und Dashboard-Flows im Browser auf schmalem Viewport geprueft
+- Overpass-Retry-Check -> ein externer `504`-/Timeout-Fehler wurde beobachtet, danach wurde die Retry-Haertung implementiert und der Kern-Smoke erneut gruen ausgefuehrt
 
 ### Nicht erfolgreich bzw. noch offen
 
-- Gelbe-Seiten-Quelle wurde in dieser Session nicht erneut als kompletter Suchjob verifiziert
-- Keine breite Test-Suite vorhanden; aktuell nur der neue Kernworkflow-Smoke-Test
+- Keine breite Test-Suite vorhanden; weiterhin nur ein schlanker Playwright-Kernworkflow-Smoke-Test plus manuelle Live-Checks
+- Overpass bleibt trotz Retry von einer externen API mit gelegentlichen Flakes abhaengig
+- Gelbe-Seiten-Selektoren bleiben extern aenderungsanfaellig
+- Keine CI/CD-Absicherung vorhanden
 
----
-
-## Aktueller Repo-Stand
+### Aktueller Repo-Stand
 
 - **Branch:** `dev`
-- **Remote-Status:** `origin/dev` steht bei `481e362`; diese Session fuegt dazu neue lokale Verifikations- und Doku-Aenderungen hinzu
-- **Relevante neue Commits auf `dev`:**
-  - `a59d27d` - `fix: sharpen dashboard lead workflow`
-  - `e0180ed` - `fix: improve lead action surfaces`
-  - `80c583b` - `docs: refresh ux handoff state`
-  - `481e362` - `docs: note dev push state`
-  - Vorherige Stabilisierung darunter: Prisma-/Build-Reparatur, SaaS-Haertung sowie Scraper-/Export-Qualitaetsfixes
-- **Relevanter `main`-Stand:** `c1a2276`
-- **Status von `main`:** nicht freigegeben
+- **Remote-Status:** `origin/dev` steht bei `481e362`; diese Session fuegt darauf eine neue Release-Haertungsrunde plus Doku-Sync hinzu
+- **Relevanter neuer Commit auf `dev`:**
+  - `707ecdb` - `fix core workflow blockers for release`
+- **Status von `main`:** technisch freigabefaehiger Kandidat, in dieser Session bewusst nicht automatisch aktualisiert
 
----
+### Release-Urteil
 
-## Was als naechstes getan werden muss
+- **Demo-Tauglichkeit:** bestanden
+- **Screenshot-/Praesentationsqualitaet:** bestanden
+- **Kernworkflow Login -> Projekt -> Suche -> Leads -> Status -> Export:** bestanden
+- **Release-Haertung Build/Start/Runtime:** bestanden mit externem Restrisiko bei Overpass
+- **Main-Promotion:** teilweise bestanden
+  Ein kontrolliertes Update von `main` ist vertretbar, wurde aber ohne sauberen Endstand und ohne explizite Freigabe bewusst nicht ausgefuehrt.
 
-1. Gelbe-Seiten-Quelle als echten Job erneut smoke-testen
-2. Danach Release-Entscheidung fuer `main` explizit treffen
-3. Optional: Smoke-Test um Follow-up-, Bulk- und Fehlerpfade erweitern
+### Was als naechstes getan werden muss
 
----
+1. Wenn gewuenscht: `dev` in sauberem Worktree kontrolliert nach `main` promoten
+2. Optional: Playwright-Smoke um Follow-up-, Bulk-, Fehler- und Source-Fallback-Pfade erweitern
+3. Mittelfristig: Unit-/Integrationstests fuer Normalizer, Dedup und Export-Builder nachziehen
 
-## Relevante Dateien fuer die naechste Session
+### Relevante Dateien fuer die naechste Session
 
 | Datei | Warum relevant |
 |-------|----------------|
-| `prisma.config.ts` | Prisma-7-CLI-Konfiguration |
-| `lib/db.ts` | Prisma-Adapter fuer PostgreSQL |
-| `proxy.ts` | Next.js 16 Schutzpfad fuer App-Seiten |
-| `lib/session.ts` | DB-authoritative API-Auth |
-| `lib/limits.ts` | SaaS-Limits fuer Jobs, Projekte, Listen und Leads |
-| `prisma/migrations/20260311081500_init/migration.sql` | Initiale Datenbankmigration |
-| `docker-compose.yml` | lokaler Postgres-Start |
-| `README.md` | aktueller Start- und Verifikationspfad |
-| `lib/scraper/sources/gelbeseiten.ts` | live-validierte Gelbe-Seiten-Heuristiken |
-| `lib/export/leadExport.ts` | Export-View, Kontaktkanaele und Confidence-Transparenz |
-| `lib/leads/filters.ts` | gemeinsamer Filterkontext fuer Leads, KPI und Export |
-| `components/leads/LeadsTable.tsx` | Schnellaktionen, Mobile-Karten und Inline-Arbeitsflaeche |
-| `app/leads/[id]/page.tsx` | Detailseite fuer taegliche Vertriebsarbeit |
+| `lib/scraper/sources/overpass.ts` | Retry-Haertung fuer transiente Overpass-Fehler |
+| `lib/sourceLabels.ts` | Lesbare Quellenlabels fuer UI und Export |
+| `app/search/page.tsx` | Such-UX, Metadatenwarnungen, Radius-Haertung |
+| `app/page.tsx` | Dashboard-Header, Exportzustand, Filter-Workspace |
+| `components/leads/JobStatus.tsx` | Statusbanner fuer laufende/fehlgeschlagene Jobs |
+| `components/leads/LeadsTable.tsx` | Tabellen-/Mobile-Darstellung und Quellenlabels |
+| `app/leads/[id]/page.tsx` | Detailseite fuer Vertriebsflow |
+| `README.md` | echter Demo-/Release-Ablauf |
 
----
-
-## Warnungen und bekannte Grenzfaelle
+### Warnungen und bekannte Grenzfaelle
 
 - `.env` wurde lokal fuer die Verifikation angelegt und ist nicht committed
-- Die lokale Docker-DB enthaelt jetzt Smoke-Daten (ein Test-User, Default-Projekt und ein Overpass-Job mit 50 Leads)
+- Die lokale Docker-DB enthaelt jetzt mehrere Smoke-Datensaetze aus Overpass- und Gelbe-Seiten-Laeufen
 - `.claude/settings.local.json` ist weiterhin lokal modifiziert und wurde bewusst nicht angeruehrt
-- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise einem kurzen Browser-Smoke-Test aktualisiert werden
+- `AGENTS.md` ist lokal modifiziert und wurde in dieser Session nicht veraendert

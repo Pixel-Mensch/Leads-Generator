@@ -1,6 +1,6 @@
 # ARCHITECTURE.md
 
-> Stand: 2026-03-11 - `dev` lokal startbar verifiziert, `main` noch nicht promoted
+> Stand: 2026-03-11 - `dev` lokal startbar und mit Overpass + Gelbe Seiten live verifiziert, `main` noch nicht promoted
 
 ## High-Level Struktur
 
@@ -43,6 +43,7 @@ leads-scraper/
 |   |-- limits.ts                     # Plan-Limits
 |   |-- leads/
 |   |   `-- filters.ts               # Gemeinsame Lead-Filter fuer API + Export
+|   |-- sourceLabels.ts              # Lesbare Quellenlabels fuer UI und Exporte
 |   |-- scraper/
 |   |   |-- orchestrator.ts           # Job Runner
 |   |   |-- deduplicator.ts           # Domain/Phone/Name Dedup
@@ -181,8 +182,9 @@ API-Schutz:
 - Fire-and-forget Jobs bleiben ohne Queue-System
 - `SCRAPE_MAX_RESULTS` ist nur ein optionaler globaler Hard-Cap; das effektive Lead-Limit kommt aus dem Plan
 - Gelbe Seiten bleibt ein statischer HTML-Scraper mit Cheerio; Playwright ist installiert, aber bewusst noch nicht im aktiven Pfad, solange die relevanten Daten statisch in HTML / `data-*`-Feldern vorliegen
+- Overpass-Requests retryen bei transienten `429`-/`5xx`- und Timeout-Fehlern, um Demo- und Smoke-Flakes durch die externe API zu reduzieren
 - Playwright wird jetzt fuer einen schlanken Browser-Smoke-Test des Kernworkflows genutzt, nicht fuer den aktiven Scraper
 - Der Smoke-Test startet die App ueber `webServer` selbst; nur Docker-Postgres muss vorab laufen
 - Exporte sind absichtlich nachvollziehbar statt minimal: Kontaktkanaele, Confidence-Signale/-Warnungen und Filter-Metadaten werden fuer CSV und XLSX mit ausgegeben
 - Dashboard, KPI und Export sollen denselben serverseitigen Lead-Filterkontext verwenden; gemeinsame Helfer liegen in `lib/leads/filters.ts`
-- Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und ein bestandener Kernworkflow-Smoke-Test
+- Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und ein bestandener Kernworkflow-Smoke-Test; bei Scraper-Aenderungen zusaetzlich mindestens ein Live-Check pro betroffener Quelle
