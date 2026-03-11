@@ -28,20 +28,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-dist/
-.next/
 .nuxt/
 
-# Output / Data
+# Output / Data (only in output/data dirs — do NOT exclude config JSON files)
 output/
 data/
-*.csv
-*.json
-!*.example.json
-*.xlsx
+output/*.csv
+data/*.csv
+output/*.json
+data/*.json
+output/*.xlsx
+data/*.xlsx
 *.db
 *.sqlite
 *.sqlite3
+
+# Next.js
+.next/
+out/
 
 # Logs
 logs/
