@@ -1,5 +1,5 @@
 /**
- * Job Orchestrator
+ * Job orchestrator
  * Runs a SearchJob: selects source(s), scrapes, deduplicates, persists leads.
  *
  * In "both" mode: partial success is allowed.
@@ -11,14 +11,29 @@ import { scrapeOverpass } from "./sources/overpass";
 import { scrapeGelbeSeiten } from "./sources/gelbeseiten";
 import { deduplicateLeads } from "./deduplicator";
 import { computeConfidence } from "@/lib/parser/normalize";
+import { getLimits } from "@/lib/limits";
 import type { RawLead } from "./sources/overpass";
 
 export type ScraperSource = "overpass" | "gelbeseiten" | "both";
 
 export async function runJob(jobId: string): Promise<void> {
-  const job = await db.searchJob.findUnique({ where: { id: jobId } });
+  const job = await db.searchJob.findUnique({
+    where: { id: jobId },
+    include: {
+      user: {
+        select: {
+          isActive: true,
+          plan: true,
+          planExpiresAt: true,
+        },
+      },
+    },
+  });
   if (!job) throw new Error(`Job nicht gefunden: ${jobId}`);
-  if (job.status === "RUNNING") throw new Error("Job läuft bereits");
+  if (job.status === "RUNNING") throw new Error("Job laeuft bereits");
+  if (job.userId && (!job.user || !job.user.isActive)) {
+    throw new Error("Job-Eigentuemer ist nicht aktiv");
+  }
 
   await db.searchJob.update({
     where: { id: jobId },
@@ -26,88 +41,112 @@ export async function runJob(jobId: string): Promise<void> {
   });
 
   try {
-    const maxResults = parseInt(process.env.SCRAPE_MAX_RESULTS ?? "50", 10);
+    const configuredMaxResults = process.env.SCRAPE_MAX_RESULTS
+      ? parseInt(process.env.SCRAPE_MAX_RESULTS, 10)
+      : null;
+    const planLimits = getLimits(
+      job.user?.plan ?? "FREE",
+      job.user?.planExpiresAt ?? null
+    );
+    const maxResults = configuredMaxResults
+      ? Math.min(configuredMaxResults, planLimits.leadsPerJob)
+      : planLimits.leadsPerJob;
     const radiusKm = job.radius ?? 5;
     const source = job.source as ScraperSource;
 
     let rawLeads: RawLead[] = [];
     const sourceErrors: string[] = [];
 
-    // ── Fetch from each requested source ──────────────────────────────────
     if (source === "overpass" || source === "both") {
       try {
-        const results = await scrapeOverpass(job.query, job.location, radiusKm, maxResults);
+        const results = await scrapeOverpass(
+          job.query,
+          job.location,
+          radiusKm,
+          maxResults
+        );
         rawLeads.push(...results);
         console.log(`[Job ${jobId}] Overpass: ${results.length} Rohtreffer`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Job ${jobId}] Overpass Fehler: ${msg}`);
-        if (source === "overpass") throw err; // single source: hard fail
+        if (source === "overpass") throw err;
         sourceErrors.push(`Overpass: ${msg}`);
       }
     }
 
     if (source === "gelbeseiten" || source === "both") {
       try {
-        const results = await scrapeGelbeSeiten(job.query, job.location, maxResults);
+        const results = await scrapeGelbeSeiten(
+          job.query,
+          job.location,
+          maxResults
+        );
         rawLeads.push(...results);
         console.log(`[Job ${jobId}] Gelbe Seiten: ${results.length} Rohtreffer`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Job ${jobId}] Gelbe Seiten Fehler: ${msg}`);
-        if (source === "gelbeseiten") throw err; // single source: hard fail
+        if (source === "gelbeseiten") throw err;
         sourceErrors.push(`GelbeSeiten: ${msg}`);
       }
     }
 
-    // If "both" mode and ALL sources failed, treat as hard failure
     if (source === "both" && rawLeads.length === 0 && sourceErrors.length > 0) {
       throw new Error(sourceErrors.join("; "));
     }
 
-    // ── Deduplicate across sources ─────────────────────────────────────────
     rawLeads = deduplicateLeads(rawLeads);
-    console.log(`[Job ${jobId}] Nach Deduplizierung: ${rawLeads.length} eindeutige Leads`);
+    console.log(
+      `[Job ${jobId}] Nach Deduplizierung: ${rawLeads.length} eindeutige Leads`
+    );
 
-    // Recalculate confidence after potential merge (fields may have changed)
     for (const lead of rawLeads) {
       lead.confidence = computeConfidence(lead).score;
     }
 
-    // ── Filter against already-stored leads for this job ──────────────────
     const existing = await db.lead.findMany({
       where: { jobId },
       select: { companyName: true, phone: true, website: true },
     });
     const existingDomains = new Set(
       existing
-        .map((l) => {
-          try { return new URL(l.website ?? "").hostname.replace(/^www\./, ""); }
-          catch { return null; }
+        .map((lead) => {
+          try {
+            return new URL(lead.website ?? "").hostname.replace(/^www\./, "");
+          } catch {
+            return null;
+          }
         })
         .filter(Boolean)
     );
     const existingPhones = new Set(
-      existing.map((l) => l.phone?.replace(/\D/g, "")).filter(Boolean)
+      existing.map((lead) => lead.phone?.replace(/\D/g, "")).filter(Boolean)
     );
-    const existingNames = new Set(existing.map((l) => l.companyName.toLowerCase().trim()));
+    const existingNames = new Set(
+      existing.map((lead) => lead.companyName.toLowerCase().trim())
+    );
 
-    const toInsert = rawLeads.filter((l) => {
+    const toInsert = rawLeads.filter((lead) => {
       const domain = (() => {
-        try { return l.website ? new URL(l.website).hostname.replace(/^www\./, "") : null; }
-        catch { return null; }
+        try {
+          return lead.website
+            ? new URL(lead.website).hostname.replace(/^www\./, "")
+            : null;
+        } catch {
+          return null;
+        }
       })();
-      const phone = l.phone?.replace(/\D/g, "");
+      const phone = lead.phone?.replace(/\D/g, "");
       if (domain && existingDomains.has(domain)) return false;
       if (phone && phone.length >= 7 && existingPhones.has(phone)) return false;
-      if (existingNames.has(l.companyName.toLowerCase().trim())) return false;
+      if (existingNames.has(lead.companyName.toLowerCase().trim())) return false;
       return true;
     });
 
-    // ── Persist ───────────────────────────────────────────────────────────
     if (toInsert.length > 0) {
       await db.lead.createMany({
-        data: toInsert.map((l) => ({ ...l, jobId })),
+        data: toInsert.map((lead) => ({ ...lead, jobId })),
         skipDuplicates: true,
       });
     }
@@ -115,16 +154,16 @@ export async function runJob(jobId: string): Promise<void> {
     const insertedCount = toInsert.length;
     console.log(`[Job ${jobId}] Gespeichert: ${insertedCount} neue Leads`);
 
-    // Build error note if partial success in "both" mode
-    const errorNote = sourceErrors.length > 0
-      ? `Teilweise Fehler: ${sourceErrors.join("; ")}`
-      : null;
+    const errorNote =
+      sourceErrors.length > 0
+        ? `Teilweise Fehler: ${sourceErrors.join("; ")}`
+        : null;
 
     await db.searchJob.update({
       where: { id: jobId },
       data: {
         status: "COMPLETED",
-        totalFound: insertedCount, // actual DB inserts, not raw array length
+        totalFound: insertedCount,
         error: errorNote,
       },
     });

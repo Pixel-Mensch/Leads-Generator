@@ -2,6 +2,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { getEffectivePlan } from "@/lib/limits";
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -14,8 +19,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const normalizedEmail = normalizeEmail(String(credentials.email));
         const user = await db.user.findUnique({
-          where: { email: String(credentials.email) },
+          where: { email: normalizedEmail },
         });
 
         if (!user || !user.passwordHash || !user.isActive) return null;
@@ -31,12 +37,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name ?? undefined,
           role: user.role,
-          plan: user.plan,
+          plan: getEffectivePlan(user.plan, user.planExpiresAt),
         };
       },
     }),
   ],
   callbacks: {
+    async authorized({ auth }) {
+      if (!auth?.user?.id) {
+        return false;
+      }
+
+      const currentUser = await db.user.findUnique({
+        where: { id: auth.user.id },
+        select: { isActive: true },
+      });
+
+      return currentUser?.isActive === true;
+    },
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
