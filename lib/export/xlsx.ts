@@ -129,6 +129,8 @@ export async function leadsToXLSX(
     { key: "Tag-Filter", value: meta?.tagFilter ?? "alle" },
     { key: "Kategorie-Filter", value: meta?.categoryFilter ?? "alle" },
     { key: "Quellen-Filter", value: meta?.sourceFilter ?? "alle" },
+    { key: "Suchfilter", value: meta?.searchFilter ?? "alle" },
+    { key: "Follow-up", value: meta?.followUpFilter ?? "alle" },
     { key: "Quellen im Export", value: formatBreakdown(summary.sourceBreakdown) },
     { key: "Qualitaetsverteilung", value: formatBreakdown(summary.tierBreakdown) },
     { key: "Erstellt von", value: "Leads Scraper" },

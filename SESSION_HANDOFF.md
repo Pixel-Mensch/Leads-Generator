@@ -32,6 +32,8 @@
 - CSV- und XLSX-Exporte uebernehmen jetzt `listId`, `tag`, `category` und `sourceName` konsistent als Filter
 - Exporte zeigen jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer bessere Nachvollziehbarkeit
 - `sourceName`-Filter in Lead- und Export-APIs matchen jetzt auch kombinierte deduplizierte Quellenwerte
+- Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende, bessere Paginationsnavigation und filterkonsistente KPI-/Export-Kontexte
+- `JobStatus` pollt jetzt bis zum terminalen Status und veraltet nicht mehr nach dem ersten Laden
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -54,6 +56,7 @@
 - Protected-Route-Test -> `GET /projects` lieferte `307 -> /login?...`
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
+- Neue Dashboard-Filterlogik (`q`, `followUp`) sowie Export-/Stats-Pfade sind build-, lint- und Prisma-generate-verifiziert
 
 ### Nicht erfolgreich bzw. noch offen
 
@@ -106,6 +109,7 @@
 | `README.md` | aktueller Start- und Verifikationspfad |
 | `lib/scraper/sources/gelbeseiten.ts` | live-validierte Gelbe-Seiten-Heuristiken |
 | `lib/export/leadExport.ts` | Export-View, Kontaktkanaele und Confidence-Transparenz |
+| `lib/leads/filters.ts` | gemeinsamer Filterkontext fuer Leads, KPI und Export |
 
 ---
 

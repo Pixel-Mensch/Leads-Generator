@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/session";
+import {
+  buildFollowUpFilter,
+  buildLeadSearchFilter,
+  buildSourceNameFilter,
+} from "@/lib/leads/filters";
 import { LeadStatus } from "@prisma/client";
 
 type SortField = "confidence" | "createdAt" | "companyName" | "city" | "followUpAt";
 
 const SORT_FIELDS: SortField[] = ["confidence", "createdAt", "companyName", "city", "followUpAt"];
-
-function buildSourceNameFilter(sourceName: string) {
-  return {
-    OR: [
-      { sourceName: { equals: sourceName, mode: "insensitive" as const } },
-      { sourceName: { startsWith: `${sourceName},`, mode: "insensitive" as const } },
-      { sourceName: { endsWith: `,${sourceName}`, mode: "insensitive" as const } },
-      { sourceName: { contains: `,${sourceName},`, mode: "insensitive" as const } },
-    ],
-  };
-}
 
 export async function GET(req: NextRequest) {
   const { session, error } = await requireAuth();
@@ -31,6 +25,8 @@ export async function GET(req: NextRequest) {
     const tag        = searchParams.get("tag")        ?? undefined;
     const category   = searchParams.get("category")   ?? undefined;
     const sourceName = searchParams.get("sourceName") ?? undefined;
+    const q          = searchParams.get("q")          ?? undefined;
+    const followUp   = searchParams.get("followUp")   ?? undefined;
     const sortRaw    = searchParams.get("sort")       ?? "confidence";
     const sort: SortField = SORT_FIELDS.includes(sortRaw as SortField)
       ? (sortRaw as SortField)
@@ -48,6 +44,8 @@ export async function GET(req: NextRequest) {
       ...(tag        ? { tags: { has: tag } }                               : {}),
       ...(category   ? { category: { contains: category, mode: "insensitive" as const } } : {}),
       ...(sourceName ? buildSourceNameFilter(sourceName)                    : {}),
+      ...(q          ? buildLeadSearchFilter(q)                             : {}),
+      ...(followUp   ? buildFollowUpFilter(followUp)                        : {}),
     };
 
     // Build orderBy — always secondary sort by createdAt desc for stability

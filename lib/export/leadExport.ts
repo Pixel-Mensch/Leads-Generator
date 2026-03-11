@@ -10,6 +10,8 @@ export interface ExportMeta {
   tagFilter?: string;
   categoryFilter?: string;
   sourceFilter?: string;
+  searchFilter?: string;
+  followUpFilter?: string;
   totalLeads?: number;
 }
 

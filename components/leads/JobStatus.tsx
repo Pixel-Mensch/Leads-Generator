@@ -21,7 +21,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Wartend",
-  RUNNING: "Läuft…",
+  RUNNING: "Laeuft...",
   COMPLETED: "Abgeschlossen",
   FAILED: "Fehlgeschlagen",
 };
@@ -30,18 +30,42 @@ export default function JobStatus({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    async function fetch_() {
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    async function loadJob() {
       const res = await fetch(`/api/jobs/${jobId}`);
-      if (res.ok && mounted) setJob(await res.json());
+      if (!res.ok || cancelled) return;
+
+      const nextJob = (await res.json()) as Job;
+      if (cancelled) return;
+
+      setJob(nextJob);
+
+      if (
+        intervalId &&
+        (nextJob.status === "COMPLETED" || nextJob.status === "FAILED")
+      ) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
     }
-    fetch_();
-    return () => { mounted = false; };
+
+    void loadJob();
+    intervalId = setInterval(() => {
+      void loadJob();
+    }, 4000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [jobId]);
 
   if (!job) return null;
 
-  const colorClass = STATUS_COLOR[job.status] ?? "text-gray-700 bg-gray-50 border-gray-200";
+  const colorClass =
+    STATUS_COLOR[job.status] ?? "text-gray-700 bg-gray-50 border-gray-200";
 
   return (
     <div className={`border rounded-lg px-4 py-3 mb-4 text-sm ${colorClass}`}>
@@ -54,10 +78,14 @@ export default function JobStatus({ jobId }: { jobId: string }) {
         <span className="font-medium">{STATUS_LABEL[job.status] ?? job.status}</span>
       </div>
       {job.status === "RUNNING" && (
-        <p className="mt-1 text-xs">Scraping läuft — Seite aktualisiert sich automatisch…</p>
+        <p className="mt-1 text-xs">
+          Scraping laeuft. Leads und Status aktualisieren sich automatisch.
+        </p>
       )}
       {job.status === "COMPLETED" && (
-        <p className="mt-1 text-xs">{job.totalFound} Treffer gefunden, {job._count.leads} Leads gespeichert.</p>
+        <p className="mt-1 text-xs">
+          {job.totalFound} Treffer gefunden, {job._count.leads} Leads gespeichert.
+        </p>
       )}
       {job.status === "FAILED" && job.error && (
         <p className="mt-1 text-xs">Fehler: {job.error}</p>

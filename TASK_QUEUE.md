@@ -28,6 +28,7 @@
 - [2026-03-11] Protected-Page-Redirect real verifiziert (`GET /projects -> 307 /login`)
 - [2026-03-11] Kernqualitaet gehaertet: URL-/Firmennamen-Normalisierung, Dedup-Merge und Overpass-Fallback verbessert
 - [2026-03-11] Scraper-/Export-Qualitaet gehaertet: Gelbe-Seiten-Live-HTML validiert, Filter-Exporte vervollstaendigt, Confidence-Transparenz verbessert
+- [2026-03-11] UX-Dashboard gehaertet: serverseitige Suche, Follow-up-Filter, konsistente KPI-/Export-Kontexte und stabileres Job-Status-Polling
 
 ---
 
@@ -62,6 +63,11 @@
 - **Status:** TODO
 - **Schritte:** Suche starten -> Leads pruefen -> CSV/XLSX mit `tag`, `category`, `sourceName` und `listId` testen
 - **Erwartetes Ergebnis:** reale Scraper-Ergebnisse und Exporte stimmen mit UI-Filtern und Meta-Infos ueberein
+
+### [P2] Neue Dashboard-Filter im Browser gegen echte DB pruefen
+- **Status:** TODO
+- **Schritte:** Volltextsuche, Follow-up-Filter, Status-Chips, Export aus gefilterter Ansicht und Job-Status-Polling gegen laufende Daten pruefen
+- **Erwartetes Ergebnis:** Filterkontext ist in Tabelle, KPI und Export konsistent
 
 ### [P3] Unit Tests fuer Normalizer, Deduplicator und Export-Builder
 - **Status:** TODO

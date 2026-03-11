@@ -41,6 +41,8 @@ leads-scraper/
 |   |-- auth.ts                       # next-auth v5 Konfiguration (JWT + authorized callback)
 |   |-- session.ts                    # requireAuth() Helper
 |   |-- limits.ts                     # Plan-Limits
+|   |-- leads/
+|   |   `-- filters.ts               # Gemeinsame Lead-Filter fuer API + Export
 |   |-- scraper/
 |   |   |-- orchestrator.ts           # Job Runner
 |   |   |-- deduplicator.ts           # Domain/Phone/Name Dedup
@@ -165,4 +167,5 @@ API-Schutz:
 - `SCRAPE_MAX_RESULTS` ist nur ein optionaler globaler Hard-Cap; das effektive Lead-Limit kommt aus dem Plan
 - Gelbe Seiten bleibt ein statischer HTML-Scraper mit Cheerio; Playwright ist installiert, aber bewusst noch nicht im aktiven Pfad, solange die relevanten Daten statisch in HTML / `data-*`-Feldern vorliegen
 - Exporte sind absichtlich nachvollziehbar statt minimal: Kontaktkanaele, Confidence-Signale/-Warnungen und Filter-Metadaten werden fuer CSV und XLSX mit ausgegeben
+- Dashboard, KPI und Export sollen denselben serverseitigen Lead-Filterkontext verwenden; gemeinsame Helfer liegen in `lib/leads/filters.ts`
 - Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und manueller Smoke-Test

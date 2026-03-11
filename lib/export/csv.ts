@@ -49,6 +49,8 @@ export function leadsToCSV(leads: Lead[], meta?: ExportMeta): string {
     if (meta.tagFilter) rows.push(["# Tag-Filter", meta.tagFilter]);
     if (meta.categoryFilter) rows.push(["# Kategorie-Filter", meta.categoryFilter]);
     if (meta.sourceFilter) rows.push(["# Quellen-Filter", meta.sourceFilter]);
+    if (meta.searchFilter) rows.push(["# Suchfilter", meta.searchFilter]);
+    if (meta.followUpFilter) rows.push(["# Follow-up", meta.followUpFilter]);
     rows.push(["# Quellen", formatBreakdown(summary.sourceBreakdown)]);
     rows.push(["# Qualitaet", formatBreakdown(summary.tierBreakdown)]);
     rows.push([]);

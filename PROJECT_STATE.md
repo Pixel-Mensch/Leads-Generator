@@ -32,6 +32,8 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - CSV- und XLSX-Exporte ziehen jetzt `listId`, `tag`, `category` und `sourceName` als Filter sauber durch
 - Exporte enthalten jetzt Kontaktkanaele, Confidence-Signale und Confidence-Warnungen fuer nachvollziehbarere Lead-Qualitaet
 - `sourceName`-Filter matchen jetzt auch deduplizierte Multi-Source-Leads in Dashboard und Export
+- Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende und filterkonsistente KPI-/Export-Kontexte
+- Job-Statusbanner pollt jetzt bis zu einem terminalen Job-Status statt nach dem ersten Laden zu veralten
 
 ## Tech Stack
 
@@ -90,6 +92,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | Lead-Detailseite (2 Spalten, Tags, Follow-up) | verbessert |
 | /api/leads/stats | fertig |
 | /api/leads/bulk | fertig |
+| Dashboard-Filterkontext (Suche, Follow-up, Export) | verbessert |
 | Initial-Migration | fertig, aber noch nicht live angewendet |
 
 ## Bekannte Probleme / Luecken
@@ -101,6 +104,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
+- **Dashboard nur gegen API verifiziert** - neue Such-/Follow-up-Filter sind build- und lint-gruen, aber noch nicht in einem manuellen Browser-Smoke-Test mit echter DB durchgeklickt
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code
