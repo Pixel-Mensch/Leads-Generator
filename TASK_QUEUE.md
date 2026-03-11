@@ -17,6 +17,7 @@
 - [2026-03-11] .gitignore-Bug behoben (*.json hatte Konfig-Dateien ausgeschlossen)
 - [2026-03-11] SaaS Foundation implementiert: User/Project/LeadList, next-auth JWT, Middleware, Plan-Limits, Auth-UI, Projekt-UI
 - [2026-03-11] Datenqualität Session 4: Normalisierung, Confidence-Scoring, Deduplication-Merge, sourceName-Tracking, Export-Verbesserungen
+- [2026-03-11] UX Session 5: Tags, Follow-up-Datum, KPI-Bar, Sort, Bulk-Aktionen, Lead-Detail-Überarbeitung, Company-Link
 
 ---
 

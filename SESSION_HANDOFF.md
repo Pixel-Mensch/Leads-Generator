@@ -1,71 +1,63 @@
 # SESSION_HANDOFF.md
 
-## Was in Session 4 umgesetzt wurde (2026-03-11)
+## Was in Session 5 umgesetzt wurde (2026-03-11)
 
-### Datenqualität, Normalisierung, Deduplizierung und Exporte auf `feat/quality-improvements`:
+### UX, Vertriebsworkflow und Demo-Tauglichkeit auf `feat/ux-improvements`:
 
-**Normalisierung (lib/parser/normalize.ts) — vollständig überarbeitet:**
-- `normalizePhone`: `0049`-Präfix → `+49`, E.164-Längenvalidierung (7–15 Ziffern), Fake-Nummer-Erkennung (alle gleiche Ziffer)
-- `normalizeUrl`: UTM- und Tracking-Parameter werden vor dem Speichern entfernt (fbclid, gclid, utm_*)
-- `normalizeEmail`: `mailto:`-Präfix stripped, erweiterte Domain-Blocklist
-- neu: `classifyEmail()` → `'business'` | `'generic'` (info@, kontakt@ etc.)
-- neu: `normalizeCompanyName()` — Umlaut-Normalisierung + GmbH/KG/AG Suffix-Strip für Dedup-Matching (nicht für Anzeige)
-- neu: `computeConfidence()` gibt `ConfidenceResult { score, tier, signals, warnings }` zurück statt nur einer Zahl — jede Bewertungsentscheidung nachvollziehbar dokumentiert
-- neu: `getConfidenceTier(score)` — leitet HIGH/MEDIUM/LOW aus gespeichertem Score ab
+**Schema (prisma/schema.prisma):**
+- `Lead.tags String[] @default([])` — PostgreSQL-Array für freie Tags
+- `Lead.followUpAt DateTime?` — eigenes Follow-up-Datum pro Lead
 
-**Confidence Score Signale:**
-- Name vorhanden: +0.15
-- Telefon ≥10 Stellen: +0.20 (kurz: +0.08)
-- Direkte E-Mail: +0.25 (generisch: +0.12)
-- Website: +0.12
-- E-Mail-Domain = Website-Domain: +0.10 (Bonus)
-- Adresse: +0.05 (nur Ort: +0.02)
-- Source overpass: +0.03, gelbeseiten: +0.05
-- Schwellwerte: HIGH ≥ 0.65, MEDIUM ≥ 0.35, LOW < 0.35
+**API-Erweiterungen:**
+- `GET /api/leads`: neue Query-Params `sort`, `tag`, `category`, `sourceName`
+- `PATCH /api/leads/[id]`: `tags` und `followUpAt` in UpdateLeadSchema
+- NEW `GET /api/leads/stats`: `groupBy(status)` → `{ byStatus, total }` für KPI-Bar
+- NEW `PATCH /api/leads/bulk`: Bulk-Status-Update für bis zu 200 Leads, Ownership-geprüft
 
-**Deduplizierung (lib/scraper/deduplicator.ts) — neu:**
-- Priorität: Domain > Phone > (normalisierter Name + Stadt)
-- **Merge statt Discard**: bei Duplikat wird der Lead mit höherem Score zur Basis; fehlende Felder werden aus dem zweiten Treffer übernommen
-- Stadtkontext im Name-Key verhindert Cross-Location-Fehler ("Hotel Meridian Berlin" ≠ "Hotel Meridian München")
+**Dashboard (app/page.tsx) — komplett überarbeitet:**
+- KPI-Strip mit 4 klickbaren Karten (Neu / Kontaktiert / Interessiert / Gewonnen) mit Live-Zählern
+- Sort-Selector: Qualität / Datum / Firma / Ort / Follow-up
+- Tag-Filter mit Enter-to-Search und Clear-Button
+- Bulk-Action-Bar: erscheint bei Selektion, Status-Dropdown + Anwenden-Button
+- Stats und Leads refresh nach Bulk-Änderungen synchron
 
-**Source Tracking:**
-- `RawLead.sourceName` hinzugefügt (überlebt durch den gesamten Pipeline)
-- Overpass setzt `sourceName: "overpass"`, Gelbe Seiten `sourceName: "gelbeseiten"`
-- `Lead.sourceName` im Prisma-Schema (nullable, rückwärtskompatibel)
+**LeadsTable (components/leads/LeadsTable.tsx) — komplett überarbeitet:**
+- Firmenname ist jetzt ein klickbarer Link zu `/leads/[id]` (war lange ein TODO)
+- Confidence-Bar ersetzt durch HIGH/MEDIUM/LOW Tier-Badge (farbkodiert)
+- Tags als graue Pills unter dem Firmennamen (Desktop + Mobile)
+- Follow-up-Datum in Orange unter den Tags
+- `sourceName` als gedämpfter Text unter Ort/Branche
+- Bulk-Checkboxen pro Zeile + Alle-auswählen im Header
+- Selektierte Zeilen blau hinterlegt
+- Verbesserter Empty-State mit Emoji + direktem Link zu /search
+- Mobile Cards: Tier-Badge, Bulk-Checkbox, Notizvorschau, Tags
 
-**Orchestrator (lib/scraper/orchestrator.ts):**
-- `totalFound` zeigt jetzt tatsächlich eingefügte DB-Zeilen, nicht Raw-Array-Länge
-- "both"-Modus: partial success — eine Quelle kann scheitern ohne den gesamten Job zu beenden
-- DB-Dedup verbessert: prüft Domain + Phone + Name (vorher nur Name||Phone)
-- `computeConfidence()` wird nach Merge erneut berechnet (Daten können sich durch Merge geändert haben)
-
-**Exporte:**
-- CSV: neue Spalten `Quelle` (sourceName) und `Qualitaet` (HIGH/MEDIUM/LOW), optionaler Metadaten-Header-Block
-- XLSX: neue Spalten `Quelle` und `Qualität`, Qualität-Zellen farbkodiert (grün/gelb/rot), Website und Quelle URL als klickbare Hyperlinks, neues Sheet `Export-Info` mit Exportzeitstempel + Filter-Kontext
-- Export-Routen übergeben Metadaten-Objekt an beide Exportfunktionen
-
-**Commit:** `e93a80f` — feat(quality): improve normalization, deduplication, confidence scoring and exports
+**Lead-Detailseite (app/leads/[id]/page.tsx) — komplett überarbeitet:**
+- 2-Spalten-Layout auf Desktop (Kontakt / Vertrieb)
+- Tier-Badge + Score + sourceName im Header
+- Tags-Sektion: Pill-basiert, Enter oder Komma zum Hinzufügen, x zum Entfernen
+- Follow-up-Datum als nativer Date-Picker, speichert auf blur
+- Notizen mit Zeichenzähler (max. 2000) und deaktiviertem Save bei keinen Änderungen
+- Breadcrumb: Zurück-Button + Firmenname
 
 ---
 
-## Was bewusst NICHT umgesetzt wurde (Session 4)
+## Was bewusst NICHT umgesetzt wurde (Session 5)
 
-- Kein Fuzzy-String-Matching (Levenshtein etc.) — zu viel Overhead für MVP
-- Keine Playwright-Scraper-Aktivierung — separate Aufgabe
-- Keine Gelbe-Seiten-Detail-Page-Fetching — würde Paginierungsarchitektur erfordern
-- Keine UI-Änderungen für Confidence-Tier-Anzeige (SOLL-Anforderung, noch offen)
-- Keine Test-Suite für Parser/Deduplicator (NICE TO HAVE, noch offen)
-- Kein Hintergrund-Reprocessing
+- Kein Kanban-View (wäre own Session)
+- Kein Demo-Datensatz
+- Keine gespeicherten Filter/Ansichten
+- Kein Bulk-Tagging (nur Bulk-Status)
+- Kein `contactedAt`-Feld im UI sichtbar (existiert in DB, aber UI hat nur `followUpAt`)
 
 ---
 
 ## Aktueller Repo-Stand
 
-- **Branch:** `feat/quality-improvements`
-- **Letzter Commit:** `e93a80f` — Datenqualität vollständig committed
+- **Branch:** `feat/ux-improvements`
+- **Letzter Commit:** `8ccea76` — UX vollständig committed
 - **Build:** Noch nicht ausgeführt
-- **DB:** Noch nicht migriert — neues Feld `Lead.sourceName` (nullable, safe)
-- **AUTH_SECRET:** Muss in .env gesetzt werden
+- **DB:** Migration noch ausstehend — 3 neue Schema-Felder (`sourceName`, `tags`, `followUpAt`)
 
 ---
 
@@ -73,29 +65,28 @@
 
 **Priorität 1 — vor erstem Start zwingend:**
 
-1. `feat/quality-improvements` → `dev` mergen
-2. AUTH_SECRET in `.env` setzen: `openssl rand -base64 32`
-3. Build testen:
-   ```bash
-   npm run db:generate && npm run build
-   ```
-4. DB starten + migrieren:
-   ```bash
-   docker compose up db -d && npm run db:migrate
-   ```
-5. Vollständigen Flow testen (Register → Login → Suche → Export)
+1. AUTH_SECRET setzen: `openssl rand -base64 32` → in `.env`
+2. Build testen: `npm run db:generate && npm run build`
+3. DB starten + migrieren: `docker compose up db -d && npm run db:migrate`
+4. Vollständigen Flow testen:
+   - Register → Login → Suche starten
+   - Leads in Tabelle prüfen: Link zu Detail, Tier-Badge, Tags
+   - KPI-Bar klicken, Sort wechseln, Tag-Filter benutzen
+   - Bulk-Selektion + Status setzen
+   - Detail-Seite: Follow-up setzen, Tag hinzufügen, Notiz speichern
 
-**Priorität 2:**
+**Priorität 2 — nach erfolgreichem Test:**
 
-6. Gelbe Seiten Selektoren live validieren
-7. Lead-Detail-Link aus LeadsTable ergänzen
-8. README Setup-Anleitung aktualisieren
+5. Gelbe Seiten Selektoren live validieren
+6. README aktualisieren (AUTH_SECRET, Migration, Demo-Flow)
 
 **SOLL — noch offen:**
 
-9. UI: Confidence-Tier (HIGH/MEDIUM/LOW) in LeadsTable anzeigen
-10. Feldvalidierung im Lead-Detail anzeigen (Warnings aus Confidence-Score)
-11. Testfälle für normalize.ts und deduplicator.ts
+7. Bulk-Tagging
+8. Gespeicherte Filter/Ansichten
+9. Kanban-Pipeline-Ansicht (Optional)
+10. Demo-Datensatz (Showcase-Projekt)
+11. Unit-Tests für normalize.ts und deduplicator.ts
 
 ---
 
@@ -103,18 +94,18 @@
 
 | Datei | Warum relevant |
 |-------|---------------|
-| [lib/parser/normalize.ts](lib/parser/normalize.ts) | Kern-Logik, ggf. Build-Fehler |
-| [lib/scraper/deduplicator.ts](lib/scraper/deduplicator.ts) | Merge-Logik testen |
-| [lib/scraper/orchestrator.ts](lib/scraper/orchestrator.ts) | totalFound + partial success |
-| [prisma/schema.prisma](prisma/schema.prisma) | sourceName Migration |
-| [lib/export/xlsx.ts](lib/export/xlsx.ts) | ExcelJS Hyperlink-API prüfen beim Build |
+| [prisma/schema.prisma](prisma/schema.prisma) | 3 neue Felder — Migration ausführen |
+| [app/page.tsx](app/page.tsx) | KPI-Bar fetch + Bulk — testen |
+| [components/leads/LeadsTable.tsx](components/leads/LeadsTable.tsx) | Tier-Badge + Tags — visuell prüfen |
+| [app/leads/[id]/page.tsx](app/leads/[id]/page.tsx) | Tags-Input + followUpAt — testen |
+| [app/api/leads/stats/route.ts](app/api/leads/stats/route.ts) | Prisma groupBy — prüfen wenn Build läuft |
 
 ---
 
 ## Warnungen und bekannte Grenzfälle
 
-- **Dedup Name-Key**: Leads ohne Stadt (`city: null`) werden mit leerem Stadtstring `""` verglichen — kann bei stadtlosen OSM-Einträgen zu False Positives führen
-- **computeConfidence nach Merge**: Score wird neu berechnet, aber `sourceName` des Gewinner-Leads bleibt; bei Merge aus zwei Quellen gehen Quellen-Signale des zweiten Leads verloren
-- **ExcelJS Hyperlinks**: Funktionieren nur wenn `lead.website` eine valide URL ist (normalizeUrl stellt das sicher), aber testen beim Build
-- **sourceName nullable**: Alte Leads ohne sourceName erhalten in Exporten leere Quelle-Zelle — korrekt, kein Bug
-- **Gelbe Seiten sleep**: Der `await sleep()` in der Artikel-Schleife wurde aus dem Loop entfernt (war sinnlos nach einmaligem Fetch); bei Pagination-Erweiterung wieder hinzufügen
+- **tags `[]` default:** PostgreSQL unterstützt das nativ. Vor der Migration gibt es das Feld nicht — TypeScript OK weil Schema updated, aber DB muss migriert sein.
+- **Bulk-Update und Ownership:** `updateMany` mit verschachteltem `job.userId` funktioniert in Prisma, aber nur bei direkten Ownership-Ketten. Testen.
+- **followUpAt Zeitzonen:** Die Datumseingabe schreibt `T08:00:00.000Z` als Fixzeit — verhindert Off-by-one bei UTC-Umrechnung. Kann bei Nutzern in anderen Zeitzonen leicht abweichen.
+- **getConfidenceTier Import:** Wird jetzt auch in LeadsTable.tsx und app/leads/[id]/page.tsx verwendet — wird im Frontend-Bundle ausgeführt. Die Funktion ist pure ohne Abhängigkeiten, das ist OK.
+- **Stats-Endpoint und Prisma groupBy:** Funktioniert mit PostgreSQL. Bei SQLite würde es anders aussehen.
