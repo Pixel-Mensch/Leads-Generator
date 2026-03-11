@@ -1,39 +1,72 @@
 # PROJECT_STATE.md
 
-## Project Purpose
-**Leads Scraper** — A tool for scraping and collecting business leads data.
-> [PLACEHOLDER] Exact data sources, target platforms, and output formats are not yet defined. Update this section once the project scope is confirmed.
+## Projektzweck
+**Leads Scraper** — B2B Lead Generator mit SaaS-fähiger Architektur.
+Sammelt öffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
+Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
+Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Current State
-- Repository initialized (empty). No source code exists yet.
-- Control files created for AI-driven development workflow.
-- No README, no build system, no dependencies defined.
+## Aktueller Stand (2026-03-11, Session 3)
 
-## Key Modules / Areas
-> [PLACEHOLDER] Define once architecture decisions are made.
+**SaaS Foundation implementiert auf `feat/saas-foundation`. Build-Test und DB noch ausstehend.**
 
-| Module | Responsibility | Status |
-|--------|---------------|--------|
-| Scraper engine | Fetches raw lead data from sources | Not started |
-| Data parser | Normalizes and structures scraped data | Not started |
-| Storage layer | Persists leads (file/DB) | Not started |
-| CLI / interface | User-facing entry point | Not started |
+## Tech Stack
 
-## Completed Work
-- [2026-03-11] Git repository initialized on `main` branch.
-- [2026-03-11] AI agent control files created: AGENTS.md, PROJECT_STATE.md, TASK_QUEUE.md, ARCHITECTURE.md, SESSION_HANDOFF.md, .github/copilot-instructions.md.
-- [2026-03-11] `dev` branch created as default working branch.
+| Technologie | Version | Status |
+|-------------|---------|--------|
+| Next.js App Router | 16.1.6 | aktiv |
+| TypeScript | 5.x | aktiv |
+| Tailwind CSS | 4.x | aktiv |
+| Prisma ORM | 7.x | Schema fertig, Migration ausstehend |
+| PostgreSQL | 16 | Docker Compose bereit |
+| next-auth | v5 beta | JWT-Auth implementiert |
+| bcryptjs | 2.x | Passwort-Hashing aktiv |
+| Cheerio | 1.x | Gelbe Seiten Scraper |
+| Playwright | 1.x | installiert, kein aktiver Scraper |
+| ExcelJS | 4.x | XLSX Export |
+| csv-stringify | 6.x | CSV Export |
+| Zod | 4.x | API Validation |
 
-## Known Issues
-- No source code exists. The project has not started.
-- No README.md — this is a documentation gap.
-- No test suite defined.
-- No dependency management file (package.json / requirements.txt / etc.) — language/runtime not yet chosen.
+## Implementierte Module
 
-## Current Focus
-Define the project scope, choose the tech stack, and create the initial project skeleton.
+| Modul | Status |
+|-------|--------|
+| User-Modell (plan, role, billing fields) | fertig |
+| Project-Modell (soft delete) | fertig |
+| LeadList-Modell | fertig |
+| next-auth JWT Auth | fertig |
+| Middleware (Routenschutz) | fertig |
+| requireAuth() Helper | fertig |
+| Plan-Limits (FREE/PRO/ENTERPRISE) | fertig |
+| /api/register | fertig |
+| /api/me (usage stats) | fertig |
+| /api/projects CRUD | fertig |
+| /api/projects/[id]/lists | fertig |
+| Alle Jobs/Leads/Export APIs | ownership-gesichert, fertig |
+| Login UI | fertig |
+| Register UI | fertig |
+| Projekte UI (Liste + Detail) | fertig |
+| NavUser (Plan-Badge, Sign-out) | fertig |
+| Suchmaske mit Projekt-Auswahl | fertig |
+| Billing-Felder im Schema | vorbereitet, kein Code |
+| Overpass Scraper | fertig |
+| Gelbe Seiten Scraper | fertig |
+| CSV/XLSX Export | fertig |
 
-## Risks and Uncertainties
-- Target websites for scraping may have rate limits, CAPTCHAs, or ToS restrictions. Verify legality and compliance before implementation.
-- No secrets or credentials have been committed yet. Ensure a `.gitignore` with `.env` is created before adding any credentials.
-- Language/runtime not decided — do not make assumptions.
+## Bekannte Probleme / Lücken
+
+- **Build nicht ausgeführt** — `npm run build` steht aus; TypeScript-Fehler möglich
+- **DB Migration ausstehend** — neues Schema (User, Project, LeadList) noch nicht migriert
+- **AUTH_SECRET muss gesetzt werden** — in .env, nie committen
+- **Playwright nicht aktiv** — installiert aber kein Source nutzt es
+- **Gelbe Seiten Selektoren heuristisch** — können brechen
+- **Kein Test-Suite** — keine Unit/Integration Tests
+- **Admin-UI fehlt** — ADMIN-Rolle im Schema, aber kein Admin-Bereich
+- **Einladungslogik fehlt** — noch nicht implementiert
+- **Plan-Upgrade Flow fehlt** — Stripe vorbereitet aber kein Code
+
+## Risiken
+
+- next-auth v5 beta: kann noch API-Änderungen haben
+- Zod v4: leicht unterschiedliche API zu v3 (prüfen beim Build)
+- Migration muss sorgfältig getestet werden (neue Non-Null FKs)
