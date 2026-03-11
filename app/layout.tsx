@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Leads Scraper",
-  description: "B2B Lead Generator - oeffentliche Unternehmensdaten sammeln",
+  title: "Leads Generator",
+  description: "B2B Lead Generator fuer oeffentlich verfuegbare Unternehmensdaten",
 };
 
 export default async function RootLayout({
@@ -26,41 +26,41 @@ export default async function RootLayout({
   return (
     <html lang="de">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 antialiased`}
       >
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <nav className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
             <Link
               href="/"
-              className="font-semibold text-blue-600 text-lg tracking-tight"
+              className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900"
             >
-              Leads Scraper
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-sm">
+                LG
+              </span>
+              <span>Leads Generator</span>
             </Link>
+
             {session?.user && (
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-slate-600 hover:text-slate-900">
                   Leads
                 </Link>
-                <Link
-                  href="/projects"
-                  className="text-gray-600 hover:text-gray-900"
-                >
+                <Link href="/projects" className="text-slate-600 hover:text-slate-900">
                   Projekte
                 </Link>
-                <Link
-                  href="/search"
-                  className="text-gray-600 hover:text-gray-900"
-                >
+                <Link href="/search" className="text-slate-600 hover:text-slate-900">
                   Neue Suche
                 </Link>
               </div>
             )}
+
             <div className="ml-auto">
               <NavUser user={session?.user ?? null} />
             </div>
           </div>
         </nav>
-        <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+
+        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
       </body>
     </html>
   );

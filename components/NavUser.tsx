@@ -14,7 +14,7 @@ const PLAN_BADGE: Record<string, string> = {
 export default function NavUser({ user }: { user: User }) {
   if (!user) {
     return (
-      <Link href="/login" className="text-sm text-blue-600 hover:underline">
+      <Link href="/login" className="text-sm font-medium text-blue-600 hover:underline">
         Anmelden
       </Link>
     );
@@ -24,19 +24,19 @@ export default function NavUser({ user }: { user: User }) {
     <div className="flex flex-wrap items-center justify-end gap-2 text-right">
       {user.plan && (
         <span
-          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
             PLAN_BADGE[user.plan] ?? PLAN_BADGE.FREE
           }`}
         >
           {user.plan}
         </span>
       )}
-      <span className="text-xs text-gray-500 truncate max-w-[180px]">
+      <span className="max-w-[180px] truncate text-xs text-slate-500">
         {user.name ?? user.email}
       </span>
       <button
         onClick={() => signOut({ callbackUrl: "/login" })}
-        className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+        className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-800"
       >
         Abmelden
       </button>
