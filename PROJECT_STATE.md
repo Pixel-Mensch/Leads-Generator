@@ -34,6 +34,9 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - `sourceName`-Filter matchen jetzt auch deduplizierte Multi-Source-Leads in Dashboard und Export
 - Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende und filterkonsistente KPI-/Export-Kontexte
 - Job-Statusbanner pollt jetzt bis zu einem terminalen Job-Status statt nach dem ersten Laden zu veralten
+- Lead-Tabelle bietet jetzt klarere Kontakt-Schnellaktionen, sichtbare Follow-up-Signale und robustere Inline-Fehler fuer Status-/Notiz-Aenderungen
+- Lead-Detailseite bietet jetzt echte Vertriebs-Schnellaktionen, Kontakt-/Follow-up-Zusammenfassung und Ruecksprung in den zugehoerigen Suchlauf
+- Mobile Top-Navigation und User-Bereich umbrechen jetzt sauberer statt auf schmalen Screens zu klemmen
 
 ## Tech Stack
 
@@ -89,7 +92,8 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | Sort-Control Dashboard | fertig |
 | Bulk-Status-Aenderung | fertig |
 | Firmenname -> Detailseite Link | fertig |
-| Lead-Detailseite (2 Spalten, Tags, Follow-up) | verbessert |
+| Lead-Detailseite (2 Spalten, Tags, Follow-up, Schnellaktionen) | verbessert |
+| Lead-Tabelle (Mobile + Schnellaktionen) | verbessert |
 | /api/leads/stats | fertig |
 | /api/leads/bulk | fertig |
 | Dashboard-Filterkontext (Suche, Follow-up, Export) | verbessert |
@@ -105,6 +109,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
 - **Dashboard nur gegen API verifiziert** - neue Such-/Follow-up-Filter sind build- und lint-gruen, aber noch nicht in einem manuellen Browser-Smoke-Test mit echter DB durchgeklickt
+- **Lead-Arbeitsflaechen nur technisch verifiziert** - Schnellaktionen, Mobile-Karten und Detailseiten-Workflows sind build-/lint-gruen, aber noch nicht manuell im Browser gegen echte Daten abgenommen
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code

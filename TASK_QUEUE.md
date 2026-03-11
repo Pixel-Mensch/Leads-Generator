@@ -29,6 +29,7 @@
 - [2026-03-11] Kernqualitaet gehaertet: URL-/Firmennamen-Normalisierung, Dedup-Merge und Overpass-Fallback verbessert
 - [2026-03-11] Scraper-/Export-Qualitaet gehaertet: Gelbe-Seiten-Live-HTML validiert, Filter-Exporte vervollstaendigt, Confidence-Transparenz verbessert
 - [2026-03-11] UX-Dashboard gehaertet: serverseitige Suche, Follow-up-Filter, konsistente KPI-/Export-Kontexte und stabileres Job-Status-Polling
+- [2026-03-11] Lead-UX gehaertet: Schnellaktionen in Tabelle/Detailseite, besserer Ruecksprung in Suchlaeufe und sauberere Mobile-Navigation
 
 ---
 
@@ -68,6 +69,11 @@
 - **Status:** TODO
 - **Schritte:** Volltextsuche, Follow-up-Filter, Status-Chips, Export aus gefilterter Ansicht und Job-Status-Polling gegen laufende Daten pruefen
 - **Erwartetes Ergebnis:** Filterkontext ist in Tabelle, KPI und Export konsistent
+
+### [P2] Lead-Tabelle und Detailseite manuell auf Demo-/Mobile-Tauglichkeit pruefen
+- **Status:** TODO
+- **Schritte:** Schnellaktionen, Statuswechsel, Notizspeicherung, Follow-up morgen, Ruecksprung in Suchlauf und Mobile-Karten gegen echte Leads pruefen
+- **Erwartetes Ergebnis:** Demo- und Vertriebsflow fuehlt sich im Browser stabil und klar an
 
 ### [P3] Unit Tests fuer Normalizer, Deduplicator und Export-Builder
 - **Status:** TODO

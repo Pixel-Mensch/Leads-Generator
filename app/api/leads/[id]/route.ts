@@ -19,6 +19,7 @@ async function getOwnedLead(leadId: string, userId: string) {
     include: {
       job: {
         select: {
+          id: true,
           query: true,
           location: true,
           source: true,

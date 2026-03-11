@@ -34,6 +34,9 @@
 - `sourceName`-Filter in Lead- und Export-APIs matchen jetzt auch kombinierte deduplizierte Quellenwerte
 - Dashboard hat jetzt serverseitige Volltextsuche, Follow-up-Filter, klarere Fehlerzustaende, bessere Paginationsnavigation und filterkonsistente KPI-/Export-Kontexte
 - `JobStatus` pollt jetzt bis zum terminalen Status und veraltet nicht mehr nach dem ersten Laden
+- Lead-Tabelle zeigt jetzt klarere Kontakt-Schnellaktionen, Follow-up-Badges und bessere Inline-Fehler fuer Status-/Notiz-Aenderungen
+- Lead-Detailseite hat jetzt Vertriebs-Schnellaktionen (`kontaktiert`, `Follow-up morgen`, Kontakt-/Quelllinks) und einen Ruecksprung in den Suchlauf
+- Top-Navigation und User-Bereich umbrechen auf Mobile sauberer
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -57,6 +60,7 @@
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
 - Neue Dashboard-Filterlogik (`q`, `followUp`) sowie Export-/Stats-Pfade sind build-, lint- und Prisma-generate-verifiziert
+- Lead-Tabelle, Detailseite und Navigation sind build-, lint- und Prisma-generate-verifiziert
 
 ### Nicht erfolgreich bzw. noch offen
 
