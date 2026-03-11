@@ -4,7 +4,7 @@
 
 ### Ergebnis
 
-**`dev` ist jetzt lokal real startbar. Docker-Postgres, Prisma-Migration, Register/Login, `/api/me`, `/api/projects`, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
+**`dev` ist jetzt lokal real startbar und der Kernworkflow wurde im Browser voll durchlaufen. Docker-Postgres, Prisma-Migration, Register/Login, Projektanlage, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads, Lead-Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
 
 ### Was umgesetzt wurde
 
@@ -37,6 +37,8 @@
 - Lead-Tabelle zeigt jetzt klarere Kontakt-Schnellaktionen, Follow-up-Badges und bessere Inline-Fehler fuer Status-/Notiz-Aenderungen
 - Lead-Detailseite hat jetzt Vertriebs-Schnellaktionen (`kontaktiert`, `Follow-up morgen`, Kontakt-/Quelllinks) und einen Ruecksprung in den Suchlauf
 - Top-Navigation und User-Bereich umbrechen auf Mobile sauberer
+- Login-, Register- und Suchformulare verknuepfen Labels jetzt korrekt mit Inputs
+- Projekt- und Listenanlage wurden mit `aria-label` fuer stabile Browser- und Accessibility-Nutzung nachgeschaerft
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -68,6 +70,7 @@
 - Auth-API-Smoke -> `/api/me` und `/api/projects` erfolgreich gegen echte Session
 - Authentifizierte Seiten -> `/`, `/projects` und `/search` liefern `HTTP 200`
 - Overpass-Smoke -> echter Job auf `COMPLETED`, 50 Leads gespeichert
+- Browser-E2E-Smoke -> Register, Login, Projektanlage, Suche, Lead-Detailseite, Statuswechsel und gefilterte Exporte erfolgreich
 - Export-Smoke -> `/api/export/csv` und `/api/export/xlsx` liefern `HTTP 200` gegen den echten Job-Bestand
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
@@ -76,7 +79,6 @@
 
 ### Nicht erfolgreich bzw. noch offen
 
-- Kein kompletter manueller Browser-Smoke-Test fuer die UI-Flaechen
 - Gelbe-Seiten-Quelle wurde in dieser Session nicht erneut als kompletter Suchjob verifiziert
 - Keine automatisierten Tests vorhanden
 
@@ -99,9 +101,9 @@
 
 ## Was als naechstes getan werden muss
 
-1. Manuellen Browser-Smoke-Test fuer UI-Flows durchklicken
-2. Gelbe-Seiten-Quelle als echten Job erneut smoke-testen
-3. Danach Release-Entscheidung fuer `main` explizit treffen
+1. Gelbe-Seiten-Quelle als echten Job erneut smoke-testen
+2. Danach Release-Entscheidung fuer `main` explizit treffen
+3. Optional: wiederholbare Smoke-Test-Abdeckung committen
 
 ---
 

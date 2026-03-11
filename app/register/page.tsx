@@ -42,8 +42,14 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
+            <label
+              htmlFor="register-name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Name (optional)
+            </label>
             <input
+              id="register-name"
               type="text"
               autoComplete="name"
               value={form.name}
@@ -52,8 +58,14 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+            <label
+              htmlFor="register-email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              E-Mail
+            </label>
             <input
+              id="register-email"
               type="email"
               required
               autoComplete="email"
@@ -63,10 +75,14 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="register-password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Passwort <span className="text-gray-400 font-normal">(min. 8 Zeichen)</span>
             </label>
             <input
+              id="register-password"
               type="password"
               required
               minLength={8}

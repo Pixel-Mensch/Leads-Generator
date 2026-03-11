@@ -33,15 +33,12 @@
 - [2026-03-11] Docker Desktop lokal gestartet, `docker compose up db -d` erfolgreich ausgefuehrt und Postgres-Container healthy verifiziert
 - [2026-03-11] Initial-Migration live gegen lokale Docker-Postgres-DB angewendet und `npm run db:migrate:status` geprueft
 - [2026-03-11] Lokaler Kernflow real verifiziert: Register, Credentials-Login, `/api/me`, `/api/projects`, Overpass-Suche mit 50 Leads, CSV/XLSX-Export und authentifizierte Seiten `/`, `/projects`, `/search`
+- [2026-03-11] Vollstaendiger Browser-E2E-Kernflow erfolgreich durchlaufen: Register, Login, Projektanlage, Overpass-Suche, Lead-Detailseite, Statuswechsel und gefilterter CSV/XLSX-Export
+- [2026-03-11] Kernflow-Formulare fuer echte Browser- und Accessibility-Nutzung gehaertet (`htmlFor`/`id`, `aria-label`)
 
 ---
 
 ## Aktive Aufgaben
-
-### [P1] Manuellen Browser-Smoke-Test fuer finale Release-Freigabe durchfuehren
-- **Status:** TODO
-- **Schritte:** Register/Login im Browser klicken, Dashboard-Filter pruefen, Lead-Detailseite oeffnen, Export aus der UI ausloesen
-- **Erwartetes Ergebnis:** letzter manuell sichtbarer UI-Check vor einer Promotion nach `main`
 
 ### [P1] Gelbe-Seiten-Quelle erneut als echter Job smoke-testen
 - **Status:** TODO
@@ -50,7 +47,7 @@
 
 ### [P1] Release-Entscheidung fuer `main` auf Basis des jetzt verifizierten Lokalstarts treffen
 - **Status:** TODO
-- **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und lokaler Kernflow sind gruen; optionaler Browser-/Gelbe-Seiten-Smoke klaert das Restrisiko
+- **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und lokaler Browser-Kernflow sind gruen; Gelbe-Seiten-Smoke klaert das Restrisiko
 - **Erwartetes Ergebnis:** dokumentiertes Ja/Nein fuer Promotion nach `main`
 
 ### [P2] Session-Freshness bei Plan- oder Statuswechsel pruefen
@@ -63,9 +60,9 @@
 - **Schritte:** Volltextsuche, Follow-up-Filter, Status-Chips, Export aus gefilterter Ansicht und Job-Status-Polling gegen laufende Daten pruefen
 - **Erwartetes Ergebnis:** Filterkontext ist in Tabelle, KPI und Export konsistent
 
-### [P2] Lead-Tabelle und Detailseite manuell auf Demo-/Mobile-Tauglichkeit pruefen
+### [P2] Lead-Tabelle und Detailseite breiter gegen echte Daten pruefen
 - **Status:** TODO
-- **Schritte:** Schnellaktionen, Statuswechsel, Notizspeicherung, Follow-up morgen, Ruecksprung in Suchlauf und Mobile-Karten gegen echte Leads pruefen
+- **Schritte:** Schnellaktionen, Notizspeicherung, Follow-up morgen, Ruecksprung in Suchlauf und Mobile-Karten gegen echte Leads pruefen
 - **Erwartetes Ergebnis:** Demo- und Vertriebsflow fuehlt sich im Browser stabil und klar an
 
 ### [P3] Unit Tests fuer Normalizer, Deduplicator und Export-Builder

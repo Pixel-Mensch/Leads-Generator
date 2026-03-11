@@ -139,10 +139,14 @@ function SearchForm() {
       >
         {projects.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="search-project"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Projekt
             </label>
             <select
+              id="search-project"
               value={form.projectId}
               onChange={(e) =>
                 setForm((current) => ({
@@ -163,10 +167,14 @@ function SearchForm() {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="search-query"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Branche / Stichwort
           </label>
           <input
+            id="search-query"
             type="text"
             required
             placeholder="z. B. Restaurant, Zahnarzt, Kfz-Werkstatt"
@@ -179,10 +187,14 @@ function SearchForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="search-location"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Ort
           </label>
           <input
+            id="search-location"
             type="text"
             required
             placeholder="z. B. Berlin, Muenchen, Hamburg"
@@ -195,10 +207,14 @@ function SearchForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="search-radius"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Radius (km)
           </label>
           <input
+            id="search-radius"
             type="number"
             min={1}
             max={100}
@@ -214,10 +230,14 @@ function SearchForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="search-source"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Quelle
           </label>
           <select
+            id="search-source"
             value={form.source}
             onChange={(e) =>
               setForm((current) => ({

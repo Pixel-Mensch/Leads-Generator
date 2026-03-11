@@ -253,6 +253,7 @@ export default function ProjectDetailPage() {
         {showListForm && (
           <form onSubmit={createList} className="flex gap-2 mb-3">
             <input
+              aria-label="Listenname"
               autoFocus
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}

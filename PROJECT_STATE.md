@@ -6,9 +6,9 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, lokaler Startpfad real verifiziert)
+## Aktueller Stand (2026-03-11, lokaler E2E-Kernworkflow real verifiziert)
 
-**`dev` ist jetzt lokal real startbar. Docker-Postgres, Prisma-Migration, Auth, eine echte Overpass-Suche und CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offene Rest-Risiken sind fehlende Browser-E2E-Abnahme und kein frischer Gelbe-Seiten-Live-Smoke-Test.**
+**`dev` ist jetzt lokal real startbar und der Kernworkflow wurde im Browser voll durchlaufen. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offene Rest-Risiken sind weiterhin der fehlende frische Gelbe-Seiten-Live-Smoke-Test und die noch fehlende dauerhafte Testabdeckung.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
 - `npm run db:generate` laeuft wieder
@@ -23,8 +23,10 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - Lokaler Dev-Boot wurde gegen `/login` mit `HTTP 200` geprueft
 - Registrierung, Credentials-Login, `/api/me` und `/api/projects` wurden gegen die echte lokale DB verifiziert
 - Authentifizierte Seiten `/`, `/projects` und `/search` liefern mit Session `HTTP 200`
+- Ein vollstaendiger Browser-E2E-Kernflow wurde erfolgreich durchlaufen: Register -> Login -> Projekt anlegen -> Suche -> Leads -> Detailseite -> Statuswechsel -> Export
 - Ein echter Overpass-Job lief lokal auf `COMPLETED` und speicherte 50 Leads
 - CSV- und XLSX-Export wurden lokal mit echtem Job/Lead-Bestand auf `HTTP 200` verifiziert
+- Login-, Register- und Suchformulare besitzen jetzt saubere Label-zu-Input-Verknuepfungen; Projekt- und Listenanlage wurden fuer Browser- und Accessibility-Nutzung mit `aria-label` nachgeschaerft
 - `requireAuth()` holt den aktuellen User-Status jetzt authoritativ aus der DB
 - Ownership fuer Lead-Listen-Zuordnung wird jetzt projektbezogen serverseitig validiert
 - Listen-Limits werden serverseitig erzwungen und in der UI sichtbar gemacht
@@ -107,14 +109,13 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
 ## Bekannte Probleme / Luecken
 
-- **Keine Test-Suite** - keine Unit- oder Integration-Tests vorhanden
-- **Kein kompletter Browser-Smoke-Test** - Kernpfade sind ueber HTTP/API real verifiziert, aber nicht per manuellem UI-Klickpfad im Browser abgenommen
+- **Keine Test-Suite** - keine committed Unit-, Integrations- oder E2E-Tests vorhanden
 - **Gelbe Seiten in dieser Session nicht live als kompletter Job erneut verifiziert** - der lokale Such-Smoke lief ueber Overpass
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
-- **Dashboard nur per HTTP verifiziert** - neue Such-/Follow-up-Filter sind build- und lint-gruen, aber noch nicht manuell in einem Browser-Smoke-Test gegen echte DB durchgeklickt
-- **Lead-Arbeitsflaechen nur technisch verifiziert** - Schnellaktionen, Mobile-Karten und Detailseiten-Workflows sind build-/lint-gruen, aber noch nicht manuell im Browser gegen echte Daten abgenommen
+- **Dashboard-Filter nicht breit regressionsgesichert** - Kernpfad und Statusfilter wurden im Browser verifiziert, aber nicht alle Filterkombinationen
+- **Lead-Arbeitsflaechen ohne wiederholbare Testabdeckung** - Detailseite und Statuswechsel wurden real geprueft, aber noch nicht als committed Smoke-Test abgesichert
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code
@@ -125,4 +126,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - next-auth v5 beta kann noch API-Aenderungen haben
 - Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` sollte erst nach einer expliziten Release-Entscheidung und einem kurzen Browser-Smoke-Test aktualisiert werden
+- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise einem wiederholbaren Smoke-Test aktualisiert werden

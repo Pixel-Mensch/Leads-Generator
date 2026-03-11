@@ -14,10 +14,12 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - Protected-Route-Redirect wurde lokal geprueft: `GET /projects -> 307 /login?...`
 - Auth-Flow wurde lokal geprueft: `POST /api/register`, Auth.js Credentials-Login, `GET /api/me`, `GET /api/projects`
 - Kernflow wurde lokal geprueft: authentifizierte Seiten `GET / -> 200`, `GET /projects -> 200`, `GET /search -> 200`
+- Vollstaendiger Browser-E2E-Kernflow wurde lokal geprueft: Register -> Login -> Projekt anlegen -> Suche starten -> Leads anzeigen -> Lead-Detail -> Statuswechsel -> CSV/XLSX Export
 - Overpass-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 50 Leads
 - CSV- und XLSX-Export wurden lokal geprueft: beide Routen antworteten mit `HTTP 200` gegen echte Lead-Daten
 - `docker compose config` ist valide
 - Eine Initial-Migration liegt in `prisma/migrations/20260311081500_init`
+- Zentrale Formulare im Kernflow wurden fuer echte Browser- und Accessibility-Nutzung nachgeschaerft: Labels sind jetzt programmatisch mit Inputs verknuepft
 
 ## Funktionsumfang
 
@@ -151,8 +153,10 @@ Erwartetes Ergebnis:
 - `/login` und `/register` laden
 - `/projects` leitet unangemeldet auf `/login` um
 - Registrierung und Login funktionieren
+- `/projects` kann ein Projekt anlegen
 - `/search` startet einen Suchlauf
-- Dashboard und Exporte sind nutzbar
+- Leads erscheinen im Dashboard und in der Detailseite
+- Statusfilter und Exporte sind nutzbar
 
 ## Externe Schnittstellen
 
@@ -227,6 +231,5 @@ Zusaetzlich erforderlich:
 
 - Keine automatisierten Tests
 - Gelbe-Seiten-Suche wurde in dieser Session nicht erneut live bis zum Ende durchlaufen
-- Keine manuelle Browser-Abnahme fuer den kompletten UI-Flow in dieser Session
 - Gelbe-Seiten-Selektoren wurden gegen Live-HTML validiert, bleiben aber extern aenderungsanfaellig
 - Kein CI/CD-Setup

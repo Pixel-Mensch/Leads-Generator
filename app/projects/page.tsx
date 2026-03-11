@@ -126,6 +126,7 @@ export default function ProjectsPage() {
           className="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex gap-2"
         >
           <input
+            aria-label="Projektname"
             autoFocus
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
