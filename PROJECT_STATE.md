@@ -6,19 +6,25 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Stabilisierung)
+## Aktueller Stand (2026-03-11, Stabilisierung + SaaS-Haertung)
 
-**Der technische Unterbau auf `dev` ist wieder lokal glaubwuerdig. `main` bleibt trotzdem blockiert, bis DB-Migration und echter Auth/Search/Export-Smoke-Test gegen eine laufende Postgres-Instanz erfolgt sind.**
+**Der technische Unterbau auf `dev` ist lokal glaubwuerdig und die SaaS-Grundschutzpfade sind gehaertet. `main` bleibt trotzdem blockiert, bis DB-Migration und echter Auth/Search/Export-Smoke-Test gegen eine laufende Postgres-Instanz erfolgt sind.**
 
-- `dev` enthaelt nach dem Release-Audit drei Folge-Commits fuer Stabilisierung und Dokumentation
+- `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
 - `npm run db:generate` laeuft wieder
 - `npm run lint` laeuft wieder
 - `npm run build` laeuft wieder
 - Prisma 7 laeuft jetzt ueber `prisma.config.ts` und `@prisma/adapter-pg`
-- Next.js 16 nutzt `proxy.ts` statt `middleware.ts`
+- Next.js 16 nutzt `proxy.ts` statt `middleware.ts`, und unautorisierte Seitenzugriffe auf `/projects` wurden real mit `307 -> /login` verifiziert
 - Eine Initial-Migration ist versioniert in `prisma/migrations/20260311081500_init`
 - Lokaler Dev-Boot wurde gegen `/login` mit `HTTP 200` geprueft
 - Docker Compose ist syntaktisch valide, aber der reale DB-Start konnte auf diesem Host nicht abgeschlossen werden, weil der Docker-Daemon nicht lief
+- `requireAuth()` holt den aktuellen User-Status jetzt authoritativ aus der DB
+- Ownership fuer Lead-Listen-Zuordnung wird jetzt projektbezogen serverseitig validiert
+- Listen-Limits werden serverseitig erzwungen und in der UI sichtbar gemacht
+- `SearchJob`-Re-Runs sind auf `PENDING` begrenzt
+- Suchlauf-Caps respektieren jetzt echte Plan-Limits statt nur `SCRAPE_MAX_RESULTS`
+- E-Mail-Adressen werden bei Register und Login normalisiert
 
 ## Tech Stack
 
@@ -48,18 +54,18 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | LeadList-Modell | fertig |
 | next-auth JWT Auth | fertig |
 | `proxy.ts` Routenschutz | fertig |
-| requireAuth() Helper | fertig |
+| requireAuth() Helper | fertig, DB-authoritativ |
 | Plan-Limits (FREE/PRO/ENTERPRISE) | fertig |
 | /api/register | fertig |
 | /api/me (usage stats) | fertig |
 | /api/projects CRUD | fertig |
-| /api/projects/[id]/lists | fertig |
+| /api/projects/[id]/lists | fertig, mit serverseitigem Listen-Limit |
 | Alle Jobs/Leads/Export APIs | ownership-gesichert, fertig |
 | Login UI | fertig |
 | Register UI | fertig |
-| Projekte UI (Liste + Detail) | fertig |
+| Projekte UI (Liste + Detail) | fertig, mit Limit-/Fehlerfeedback |
 | NavUser (Plan-Badge, Sign-out) | fertig |
-| Suchmaske mit Projekt-Auswahl | fertig |
+| Suchmaske mit Projekt-Auswahl | fertig, mit Usage-Hinweisen |
 | Overpass Scraper | fertig |
 | Gelbe Seiten Scraper | fertig |
 | Normalisierung (Phone/URL/Email/Domain) | verbessert |
@@ -90,10 +96,11 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code
+- **Layout-Session bleibt JWT-basiert** - API-Guards sind authoritativ ueber DB, aber ein reiner UI-Planwechsel ohne neues Session-Issue ist nicht separat getestet
 
 ## Risiken
 
 - next-auth v5 beta kann noch API-Aenderungen haben
-- Prisma 7 + Adapter-Pfad ist build-verifiziert, aber sollte nach echter DB-Migration noch einmal unter Last geprueft werden
+- Prisma 7 + Adapter-Pfad ist build-verifiziert, sollte aber nach echter DB-Migration noch einmal gegen reale Queries geprueft werden
 - Es gibt weiterhin keine CI-Absicherung
 - `main` ist noch nicht release-faehig, solange DB-Migration und Smoke-Test fehlen

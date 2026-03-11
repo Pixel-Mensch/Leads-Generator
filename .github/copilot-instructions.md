@@ -19,11 +19,13 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 
 ## Auth und Ownership
 - next-auth v5 beta mit JWT-Strategie
-- Schutzpfad laeuft ueber `proxy.ts`
+- `proxy.ts` schuetzt nur App-Seiten; API-Routen liefern Auth-Fehler selbst
 - Jede API-Route startet mit `const { session, error } = await requireAuth()` aus `lib/session.ts`
+- `requireAuth()` liest den aktuellen User aus der DB und prueft `isActive`
 - Alle DB-Queries filtern per `userId: session.user.id`
 - Ownership-Verletzungen -> 404 statt 403
-- Plan-Limits pruefen mit `checkJobLimit()` / `checkProjectLimit()` aus `lib/limits.ts`
+- Lead-Listen duerfen nur innerhalb desselben eigenen Projekts zugeordnet werden
+- Plan-Limits pruefen mit `checkJobLimit()` / `checkProjectLimit()` / `checkLeadListLimit()` aus `lib/limits.ts`
 
 ## Projekt-Modell
 - Projects haben Soft Delete: `where: { deletedAt: null }`

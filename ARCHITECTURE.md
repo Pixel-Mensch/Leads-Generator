@@ -11,10 +11,10 @@ leads-scraper/
 |   |-- page.tsx                      # Dashboard: KPI-Bar, Lead-Liste, Filter, Sort, Export, Bulk-Aktionen
 |   |-- login/page.tsx                # Anmelde-Seite
 |   |-- register/page.tsx             # Registrierung
-|   |-- search/page.tsx               # Suchmaske mit Projekt-Auswahl
+|   |-- search/page.tsx               # Suchmaske mit Projekt-Auswahl + Usage-Hinweisen
 |   |-- leads/[id]/page.tsx           # Lead-Detailseite mit Tags, Follow-up und Notizen
-|   |-- projects/page.tsx             # Projekt-Uebersicht
-|   |-- projects/[id]/page.tsx        # Projekt-Detail: Jobs + Listen
+|   |-- projects/page.tsx             # Projekt-Uebersicht + Projektlimit-Hinweise
+|   |-- projects/[id]/page.tsx        # Projekt-Detail: Jobs + Listen + Listenlimit-Hinweise
 |   `-- api/
 |       |-- auth/[...nextauth]/       # next-auth Handler
 |       |-- register/route.ts         # Registrierung
@@ -38,7 +38,7 @@ leads-scraper/
 |       `-- JobStatus.tsx             # Job-Statusbanner mit Auto-Poll
 |-- lib/
 |   |-- db.ts                         # Prisma Client mit `@prisma/adapter-pg`
-|   |-- auth.ts                       # next-auth v5 Konfiguration (JWT)
+|   |-- auth.ts                       # next-auth v5 Konfiguration (JWT + authorized callback)
 |   |-- session.ts                    # requireAuth() Helper
 |   |-- limits.ts                     # Plan-Limits
 |   |-- scraper/
@@ -55,7 +55,7 @@ leads-scraper/
 |   |-- schema.prisma                 # Datenmodell
 |   `-- migrations/                   # versionierte SQL-Migrationen
 |-- prisma.config.ts                  # Prisma-7-CLI-Konfiguration
-|-- proxy.ts                          # Next.js 16 Route-Protection
+|-- proxy.ts                          # Next.js 16 Route-Protection fuer App-Seiten
 |-- types/next-auth.d.ts              # Session-Typ-Erweiterungen
 |-- docker-compose.yml                # PostgreSQL + App
 |-- Dockerfile                        # Multi-Stage Build
@@ -124,16 +124,20 @@ User
 ```
 
 API-Schutz:
-- `requireAuth()` in jeder geschuetzten Route
+- `proxy.ts` schuetzt nur App-Seiten und leitet unautorisierte Requests auf `/login` um
+- API-Routen verlassen sich auf `requireAuth()` fuer JSON-konforme 401/403-Antworten
+- `requireAuth()` liest den aktuellen User-Status authoritativ aus der DB
 - Alle Queries filtern per `userId: session.user.id`
+- Lead-Listen duerfen nur innerhalb desselben eigenen Projekts zugeordnet werden
 - Ownership-Verletzungen geben 404
 
 ## Authentifizierung
 
 - next-auth v5 beta mit Credentials Provider
 - JWT-Strategie ohne Session-Table
-- `proxy.ts` schuetzt alle internen Routen ausser Login/Register/Auth-Endpunkte
+- `proxy.ts` schuetzt App-Seiten, API-Auth bleibt in den Route-Handlern
 - `AUTH_SECRET` und `AUTH_URL` kommen aus `.env`
+- Login und Registrierung normalisieren E-Mail-Adressen auf lowercase
 
 ## Prisma- / DB-Architektur
 
@@ -144,11 +148,11 @@ API-Schutz:
 
 ## Plan-Limits (`lib/limits.ts`)
 
-| Plan | Jobs/Monat | Leads/Job | Projekte |
-|------|------------|-----------|----------|
-| FREE | 10 | 50 | 2 |
-| PRO | 200 | 200 | 20 |
-| ENTERPRISE | unendlich | 500 | unendlich |
+| Plan | Jobs/Monat | Leads/Job | Projekte | Listen |
+|------|------------|-----------|----------|--------|
+| FREE | 10 | 50 | 2 | 5 |
+| PRO | 200 | 200 | 20 | 100 |
+| ENTERPRISE | unendlich | 500 | unendlich | unendlich |
 
 ## Wichtige Architekturentscheide
 
@@ -157,4 +161,5 @@ API-Schutz:
 - Soft Delete nur auf Projects
 - Kein RBAC-Framework: `UserRole` Enum reicht
 - Fire-and-forget Jobs bleiben ohne Queue-System
+- `SCRAPE_MAX_RESULTS` ist nur ein optionaler globaler Hard-Cap; das effektive Lead-Limit kommt aus dem Plan
 - Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und manueller Smoke-Test

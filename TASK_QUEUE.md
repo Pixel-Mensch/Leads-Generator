@@ -24,6 +24,8 @@
 - [2026-03-11] Initial-Migration erzeugt und versioniert
 - [2026-03-11] README auf echten Stack und Startpfad aktualisiert
 - [2026-03-11] Dev-Boot lokal geprueft (`GET /login -> HTTP 200`)
+- [2026-03-11] SaaS-Audit abgeschlossen: API-Ownership, Listen-Limits, E-Mail-Normalisierung und PENDING-only Job-Start gehaertet
+- [2026-03-11] Protected-Page-Redirect real verifiziert (`GET /projects -> 307 /login`)
 
 ---
 
@@ -48,6 +50,11 @@
 - **Status:** TODO
 - **Voraussetzungen:** `db:generate`, `lint`, `build`, Live-Migration und Smoke-Test gruen
 - **Erwartetes Ergebnis:** dokumentiertes Ja/Nein fuer Promotion nach `main`
+
+### [P2] Session-Freshness bei Plan- oder Statuswechsel pruefen
+- **Status:** TODO
+- **Problem:** API-Schutz ist DB-authoritativ, das Layout zeigt Session-Daten weiter aus JWT
+- **Erwartetes Ergebnis:** Klar dokumentiert, ob Plan-/Deactivate-Aenderungen ohne Re-Login im UI sofort sichtbar sein muessen
 
 ### [P2] Gelbe Seiten Selektoren live validieren
 - **Status:** TODO

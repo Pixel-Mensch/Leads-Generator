@@ -8,6 +8,7 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - `npm run lint` laeuft
 - `npm run build` laeuft
 - Dev-Server-Boot wurde lokal geprueft: `GET /login -> HTTP 200`
+- Protected-Route-Redirect wurde lokal geprueft: `GET /projects -> 307 /login?...`
 - `docker compose config` ist valide
 - Eine Initial-Migration liegt in `prisma/migrations/20260311081500_init`
 - Nicht verifiziert auf diesem Host: `docker compose up db -d` und `npm run db:migrate`, weil der Docker-Desktop-Daemon zum Pruefzeitpunkt nicht lief
@@ -20,6 +21,22 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - Lead-Workflow mit Status, Tags, Follow-up und Notizen
 - KPI-Bar, Sortierung, Filter und Bulk-Status-Update
 - CSV- und XLSX-Export
+
+## SaaS-Schutzpfade
+
+- Geschuetzte App-Seiten werden in `proxy.ts` auf `/login` umgeleitet
+- API-Routen pruefen Auth immer explizit mit `requireAuth()`
+- Ownership folgt der Kette `User -> Project -> (LeadList, SearchJob) -> Lead`
+- Lead-Listen duerfen nur im eigenen Projekt angelegt und zugewiesen werden
+- Plan-Limits werden serverseitig fuer Jobs, Projekte, Listen und Leads pro Job erzwungen
+
+### Plan-Limits
+
+| Plan | Jobs / Monat | Leads / Job | Projekte | Listen |
+|------|---------------|-------------|----------|--------|
+| FREE | 10 | 50 | 2 | 5 |
+| PRO | 200 | 200 | 20 | 100 |
+| ENTERPRISE | unendlich | 500 | unendlich | unendlich |
 
 ## Tech Stack
 
@@ -52,6 +69,7 @@ Pflichtwerte in `.env`:
 - `AUTH_SECRET`: mit `openssl rand -base64 32` erzeugen
 - `AUTH_URL`: lokal normalerweise `http://localhost:3000`
 - `DATABASE_URL`: Standard fuer Docker-DB ist bereits in `.env.example` enthalten
+- `SCRAPE_MAX_RESULTS`: optionaler globaler Hard-Cap, sollte nicht unter dem hoechsten Plan-Limit liegen
 
 ### 3. PostgreSQL starten
 
@@ -112,6 +130,7 @@ Zusaetzlich erforderlich:
 5. Dashboard pruefen: KPI-Bar, Sortierung, Filter, Bulk-Status
 6. Lead-Detailseite pruefen: Tags, Follow-up, Notizen
 7. CSV- und XLSX-Export aus dem Dashboard pruefen
+8. Unangemeldet `/projects` oder `/search` aufrufen und Redirect auf `/login` pruefen
 
 ## Docker
 

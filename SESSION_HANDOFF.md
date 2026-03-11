@@ -4,7 +4,7 @@
 
 ### Ergebnis
 
-**`dev` ist technisch deutlich stabiler und lokal bootbar. `main` bleibt blockiert, bis die DB live gestartet, die Migration angewendet und der Kernflow mit echter Auth/Search/Export-Nutzung getestet wurde.**
+**`dev` ist technisch deutlich stabiler, lokal bootbar und um die kritischen SaaS-Schutzpfade gehaertet. `main` bleibt blockiert, bis die DB live gestartet, die Migration angewendet und der Kernflow mit echter Auth/Search/Export-Nutzung getestet wurde.**
 
 ### Was umgesetzt wurde
 
@@ -17,16 +17,24 @@
 **Code-Fixes:**
 - React-Lint-Fehler in `app/page.tsx` und `app/projects/page.tsx` behoben
 - XLSX-Export-Rueckgabe fuer `NextResponse` typkorrigiert
-- kleine Warning-Bereinigungen in API/Scraper-Dateien
+- `requireAuth()` liest User-Status jetzt aus der DB statt nur aus dem JWT
+- Login und Registrierung normalisieren E-Mail-Adressen
+- Listen-Limits werden serverseitig erzwungen
+- Lead-Listen-Zuordnung ist auf das eigene Projekt begrenzt
+- Job-Starts sind nur noch aus `PENDING` moeglich
+- Scraper respektiert echte Plan-Limits fuer Leads pro Job
+- Protected Pages leiten jetzt real auf `/login` um
+- Search-/Project-UI zeigen Limit- und Fehlerfeedback
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
 - `migration_lock.toml` angelegt
 - `db:migrate:deploy` und `db:migrate:status` in `package.json` ergaenzt
 - Compose-Warnung bereinigt (`version` entfernt)
+- `.env.example` auf echten globalen Scrape-Cap gebracht
 
 **Doku:**
-- README auf echten Stack und echten Startpfad gebracht
+- README auf echten Stack, echte SaaS-Schutzpfade und echten Startpfad gebracht
 - PROJECT_STATE, TASK_QUEUE, ARCHITECTURE und Copilot-Instruktionen synchronisiert
 
 ### Reale Verifikation
@@ -36,6 +44,7 @@
 - `npm run build` -> erfolgreich
 - `docker compose config` -> erfolgreich
 - Dev-Boot-Test -> `GET /login` lieferte `HTTP 200`
+- Protected-Route-Test -> `GET /projects` lieferte `307 -> /login?...`
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 
 ### Nicht erfolgreich bzw. noch offen
@@ -53,6 +62,7 @@
 - **Relevante neue Commits:**
   - `d935daf` - `fix: restore prisma build and next runtime path`
   - `fbd9f25` - `chore: add migration baseline and db workflow scripts`
+  - `0b078a2` - `fix: harden saas auth and ownership paths`
 - **Relevanter `main`-Stand:** `c1a2276`
 - **Status von `main`:** nicht freigegeben
 
@@ -80,7 +90,9 @@
 |-------|----------------|
 | `prisma.config.ts` | Prisma-7-CLI-Konfiguration |
 | `lib/db.ts` | Prisma-Adapter fuer PostgreSQL |
-| `proxy.ts` | Next.js 16 Schutzpfad |
+| `proxy.ts` | Next.js 16 Schutzpfad fuer App-Seiten |
+| `lib/session.ts` | DB-authoritative API-Auth |
+| `lib/limits.ts` | SaaS-Limits fuer Jobs, Projekte, Listen und Leads |
 | `prisma/migrations/20260311081500_init/migration.sql` | Initiale Datenbankmigration |
 | `docker-compose.yml` | lokaler Postgres-Start |
 | `README.md` | aktueller Start- und Verifikationspfad |
