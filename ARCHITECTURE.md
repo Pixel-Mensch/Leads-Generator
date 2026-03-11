@@ -188,3 +188,4 @@ API-Schutz:
 - Exporte sind absichtlich nachvollziehbar statt minimal: Kontaktkanaele, Confidence-Signale/-Warnungen und Filter-Metadaten werden fuer CSV und XLSX mit ausgegeben
 - Dashboard, KPI und Export sollen denselben serverseitigen Lead-Filterkontext verwenden; gemeinsame Helfer liegen in `lib/leads/filters.ts`
 - Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und ein bestandener Kernworkflow-Smoke-Test; bei Scraper-Aenderungen zusaetzlich mindestens ein Live-Check pro betroffener Quelle
+- Promotion nach `main` nur aus einem sauberen Worktree (`git status --short` leer), damit ein freigegebener Release-Stand eindeutig einem verifizierten Commit entspricht

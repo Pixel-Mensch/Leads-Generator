@@ -6,11 +6,13 @@ Sammelt oeffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, lokaler Release-/Demo-Check real verifiziert)
+## Aktueller Stand (2026-03-11, Release-Gates auf dem aktuellen `dev`-Worktree frisch verifiziert)
 
-**`dev` ist lokal startbar, demo-tauglich und als Release-Kandidat real verifiziert. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, ein frischer Gelbe-Seiten-Live-Job, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; technisch ist der Stand freigabefaehig, operativ bleiben aber die fehlende CI und die schmale Testbasis als ehrliche Restrisiken.**
+**`dev` ist lokal startbar, demo-tauglich und als Release-Kandidat real verifiziert. Auf dem aktuellen lokalen `dev`-Worktree liefen `npm run db:generate`, `npm run lint`, `npm run build` und `npm run test:e2e:core` erneut erfolgreich. `main` wird in dieser Session trotzdem nicht automatisch promoted: technisch sind die Gates gruen, operativ blockieren aber ein nicht sauberer Worktree, fehlende CI und die weiterhin schmale Testbasis.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
+- Aktive Phase: PHASE F Release-Haertung abgeschlossen; PHASE G Main-Promotion bleibt bis zu einem sauberen Worktree blockiert
+- 2026-03-11: Release-Gates auf dem aktuellen lokalen `dev`-Worktree erneut erfolgreich verifiziert (`db:generate`, `lint`, `build`, `test:e2e:core`)
 - `npm run db:generate` laeuft wieder
 - `docker compose up db -d` wurde erfolgreich gegen Docker Desktop ausgefuehrt; der `db`-Container ist healthy
 - `npm run db:migrate` wurde erfolgreich gegen die laufende lokale Postgres-DB ausgefuehrt
@@ -118,6 +120,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 ## Bekannte Probleme / Luecken
 
 - **Keine breite Test-Suite** - ein Playwright-Kernworkflow-Smoke-Test ist vorhanden, aber keine Unit- oder Integrations-Tests
+- **Worktree fuer `main` aktuell nicht sauber** - lokale uncommitted Aenderungen in `AGENTS.md`, `.claude/settings.local.json`, `app/layout.tsx`, `app/globals.css`, `app/projects/[id]/page.tsx` und `components/NavUser.tsx` verhindern eine kontrollierte Promotion
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Overpass bleibt extern flakey** - Retry-Haertung ist eingebaut, aber die Quelle kann weiterhin `504` oder Timeouts liefern
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
@@ -134,4 +137,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - next-auth v5 beta kann noch API-Aenderungen haben
 - Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` sollte nur kontrolliert aus einem sauberen `dev`-Stand aktualisiert werden; technisch ist die Freigabe jetzt vertretbar, organisatorisch fehlt aber weiterhin CI
+- `main` sollte nur kontrolliert aus einem sauberen `dev`-Stand aktualisiert werden; auf dem aktuellen Rechner blockieren lokale uncommitted Aenderungen diesen Schritt weiterhin

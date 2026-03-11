@@ -41,15 +41,16 @@
 - [2026-03-11] Release-Haertung fuer Demo/UI umgesetzt: klare Retry-/Fehlerhinweise in Auth, Projekten und Suche; lesbare Quellenlabels; leere Exporte im Dashboard deaktiviert
 - [2026-03-11] Overpass gegen transiente `504`-/Timeout-Flakes mit Retry-Logik gehaertet; Playwright-Kernworkflow danach wieder gruen
 - [2026-03-11] Release-Entscheidung dokumentiert: `dev` ist main-faehiger Kandidat, Promotion aber bewusst nicht automatisch ausgefuehrt
+- [2026-03-11] Release-Gates auf dem aktuellen `dev`-Worktree frisch rerun: `npm run db:generate`, `npm run lint`, `npm run build`, `npm run test:e2e:core` gruen
 
 ---
 
 ## Aktive Aufgaben
 
-### [P2] Kontrollierte Promotion von `dev` nach `main` in sauberem Worktree vorbereiten
-- **Status:** READY, in dieser Session bewusst nicht automatisch ausgefuehrt
-- **Problem:** Der technische Release-Kandidat ist verifiziert, aber es fehlt weiterhin CI und der lokale Worktree ist nicht vollstaendig clean
-- **Erwartetes Ergebnis:** bewusstes Ja/Nein fuer die finale Branch-Aktualisierung, statt einer stillen Auto-Promotion
+### [P1] Sauberen Worktree fuer kontrollierte Promotion von `dev` nach `main` herstellen
+- **Status:** BLOCKED
+- **Problem:** Alle technischen Release-Gates sind gruen, aber der aktuelle lokale Worktree enthaelt uncommitted Aenderungen in `AGENTS.md`, `.claude/settings.local.json`, `app/layout.tsx`, `app/globals.css`, `app/projects/[id]/page.tsx` und `components/NavUser.tsx`
+- **Erwartetes Ergebnis:** Jede lokale Aenderung ist bewusst eingeordnet, committed, verschoben oder verworfen; erst danach darf `main` kontrolliert aktualisiert werden
 
 ### [P2] Session-Freshness bei Plan- oder Statuswechsel pruefen
 - **Status:** TODO

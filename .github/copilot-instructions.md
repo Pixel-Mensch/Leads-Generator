@@ -38,6 +38,7 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - `dev` ist der Standard-Arbeitsbranch
 - Feature-Branches von `dev` abzweigen: `feat/`, `fix/`, `chore/`
 - Kein Merge nach `main` ohne erfolgreiches `npm run db:generate`, `npm run build`, `npm run lint`, Live-Migration, Smoke-Test und Handoff-Update
+- Kein Merge oder Fast-Forward nach `main`, solange `git status --short` lokale uncommitted Aenderungen zeigt
 
 ## Lokaler Minimalstart
 - `.env.example` nach `.env` kopieren
@@ -67,5 +68,6 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 - Vor Commit `npm run db:generate && npm run build && npm run lint` ausfuehren
 - Fuer Release-Kandidaten zusaetzlich Live-Migration und `npm run test:e2e:core` bzw. einen gleichwertigen Kernworkflow-Smoke-Test ausfuehren
 - `npm run test:e2e:core` startet die App lokal ueber Playwright `webServer`; vorausgesetzt wird nur eine laufende DB
+- Vor einer kontrollierten `main`-Promotion muss der gepruefte Release-Stand einem sauberen Commit auf `dev` entsprechen
 - Fehlende Tests in PROJECT_STATE.md dokumentieren
 - Fuer Scraper-/Export-Aenderungen nach Moeglichkeit mindestens `db:generate`, `lint`, `build` plus einen kleinen Live-/HTML-Check dokumentieren
