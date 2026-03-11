@@ -20,6 +20,8 @@ export interface RawLead {
   city: string | null;
   category: string | null;
   sourceUrl: string | null;
+  /** Which scraper produced this lead — preserved through to DB and exports */
+  sourceName: string | null;
   confidence: number;
 }
 
@@ -156,9 +158,10 @@ out center tags ${maxResults};
       city,
       category,
       sourceUrl: `https://www.openstreetmap.org/${element.type}/${element.id}`,
+      sourceName: "overpass",
       confidence: 0,
     };
-    lead.confidence = computeConfidence(lead);
+    lead.confidence = computeConfidence(lead).score;
     leads.push(lead);
   }
 
