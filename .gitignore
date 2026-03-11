@@ -46,6 +46,8 @@ data/*.xlsx
 # Next.js
 .next/
 out/
+playwright-report/
+test-results/
 
 # Logs
 logs/

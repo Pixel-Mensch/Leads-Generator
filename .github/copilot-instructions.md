@@ -65,6 +65,6 @@ Vor Code-Vorschlaegen oder Generierung in dieser Reihenfolge lesen:
 
 ## Testing
 - Vor Commit `npm run db:generate && npm run build && npm run lint` ausfuehren
-- Fuer Release-Kandidaten zusaetzlich Live-Migration und manuellen Smoke-Test ausfuehren
+- Fuer Release-Kandidaten zusaetzlich Live-Migration und `npm run test:e2e:core` bzw. einen gleichwertigen Kernworkflow-Smoke-Test ausfuehren
 - Fehlende Tests in PROJECT_STATE.md dokumentieren
 - Fuer Scraper-/Export-Aenderungen nach Moeglichkeit mindestens `db:generate`, `lint`, `build` plus einen kleinen Live-/HTML-Check dokumentieren

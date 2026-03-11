@@ -17,6 +17,7 @@ B2B Lead Generator auf Next.js 16 mit Auth, Projekten, Lead-Listen, Scraping, CR
 - Vollstaendiger Browser-E2E-Kernflow wurde lokal geprueft: Register -> Login -> Projekt anlegen -> Suche starten -> Leads anzeigen -> Lead-Detail -> Statuswechsel -> CSV/XLSX Export
 - Overpass-Suche wurde lokal geprueft: ein echter Job lief auf `COMPLETED` und speicherte 50 Leads
 - CSV- und XLSX-Export wurden lokal geprueft: beide Routen antworteten mit `HTTP 200` gegen echte Lead-Daten
+- Reproduzierbarer Playwright-Smoke-Test fuer den Kernworkflow ist vorhanden und lief lokal gruen
 - `docker compose config` ist valide
 - Eine Initial-Migration liegt in `prisma/migrations/20260311081500_init`
 - Zentrale Formulare im Kernflow wurden fuer echte Browser- und Accessibility-Nutzung nachgeschaerft: Labels sind jetzt programmatisch mit Inputs verknuepft
@@ -180,11 +181,38 @@ Aktuell nicht noetig:
 npm run dev
 npm run build
 npm run lint
+npm run test:e2e:core
 npm run db:generate
 npm run db:migrate
 npm run db:migrate:deploy
 npm run db:migrate:status
 ```
+
+## Browser-Smoke-Test
+
+Ein schlanker Playwright-Test deckt den Kernworkflow ab:
+
+```bash
+npx playwright install chromium
+npm run test:e2e:core
+```
+
+Voraussetzungen:
+
+- Docker-DB laeuft
+- `.env` ist gesetzt
+- die App laeuft lokal auf `http://localhost:3000`
+
+Der Test deckt ab:
+
+- Register
+- Login
+- Projektanlage
+- Overpass-Suche
+- Lead-Detailseite
+- Statuswechsel auf `CONTACTED`
+- gefilterten CSV-Export
+- gefilterten XLSX-Export
 
 ## Release-Check
 
@@ -220,6 +248,7 @@ Zusaetzlich erforderlich:
 - Datenbank nicht erreichbar: `docker compose ps` pruefen. Der `db`-Container muss healthy sein und `localhost:5432` offen haben.
 - Prisma Client nicht generiert: `npm run db:generate` ausfuehren.
 - Migration nicht angewendet: `npm run db:migrate` und danach optional `npm run db:migrate:status`.
+- Playwright-Browser fehlt: `npx playwright install chromium` ausfuehren.
 
 ## Docker
 
@@ -229,7 +258,7 @@ Zusaetzlich erforderlich:
 
 ## Bekannte Luecken
 
-- Keine automatisierten Tests
+- Keine breite Test-Suite; aktuell nur ein schlanker Playwright-Kernworkflow-Smoke-Test
 - Gelbe-Seiten-Suche wurde in dieser Session nicht erneut live bis zum Ende durchlaufen
 - Gelbe-Seiten-Selektoren wurden gegen Live-HTML validiert, bleiben aber extern aenderungsanfaellig
 - Kein CI/CD-Setup

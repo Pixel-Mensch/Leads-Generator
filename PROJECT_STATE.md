@@ -8,7 +8,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
 ## Aktueller Stand (2026-03-11, lokaler E2E-Kernworkflow real verifiziert)
 
-**`dev` ist jetzt lokal real startbar und der Kernworkflow wurde im Browser voll durchlaufen. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offene Rest-Risiken sind weiterhin der fehlende frische Gelbe-Seiten-Live-Smoke-Test und die noch fehlende dauerhafte Testabdeckung.**
+**`dev` ist jetzt lokal real startbar, der Kernworkflow wurde im Browser voll durchlaufen und als Playwright-Smoke-Test abgelegt. Docker-Postgres, Prisma-Migration, Register, Login, Projektanlage, Overpass-Suche, Lead-Anzeige, Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden gegen laufende lokale Dienste verifiziert. `main` wird in dieser Session trotzdem nicht automatisch promoted; offenes Restrisiko bleibt vor allem der fehlende frische Gelbe-Seiten-Live-Smoke-Test.**
 
 - `dev` enthaelt nach dem Release-Audit weitere Stabilisierungs- und SaaS-Haertungs-Commits
 - `npm run db:generate` laeuft wieder
@@ -24,6 +24,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - Registrierung, Credentials-Login, `/api/me` und `/api/projects` wurden gegen die echte lokale DB verifiziert
 - Authentifizierte Seiten `/`, `/projects` und `/search` liefern mit Session `HTTP 200`
 - Ein vollstaendiger Browser-E2E-Kernflow wurde erfolgreich durchlaufen: Register -> Login -> Projekt anlegen -> Suche -> Leads -> Detailseite -> Statuswechsel -> Export
+- Ein reproduzierbarer Playwright-Smoke-Test fuer genau diesen Kernworkflow liegt jetzt in `tests/e2e/core-workflow.spec.ts`
 - Ein echter Overpass-Job lief lokal auf `COMPLETED` und speicherte 50 Leads
 - CSV- und XLSX-Export wurden lokal mit echtem Job/Lead-Bestand auf `HTTP 200` verifiziert
 - Login-, Register- und Suchformulare besitzen jetzt saubere Label-zu-Input-Verknuepfungen; Projekt- und Listenanlage wurden fuer Browser- und Accessibility-Nutzung mit `aria-label` nachgeschaerft
@@ -60,7 +61,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | next-auth | v5 beta | JWT-Auth implementiert |
 | bcryptjs | 3.x | Passwort-Hashing aktiv |
 | Cheerio | 1.x | Gelbe Seiten Scraper |
-| Playwright | 1.x | installiert, kein aktiver Scraper |
+| Playwright | 1.x | installiert, E2E-Smoke-Test aktiv |
 | ExcelJS | 4.x | XLSX Export |
 | csv-stringify | 6.x | CSV Export |
 | Zod | 4.x | API Validation |
@@ -109,13 +110,13 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
 ## Bekannte Probleme / Luecken
 
-- **Keine Test-Suite** - keine committed Unit-, Integrations- oder E2E-Tests vorhanden
+- **Keine breite Test-Suite** - ein Playwright-Kernworkflow-Smoke-Test ist vorhanden, aber keine Unit- oder Integrations-Tests
 - **Gelbe Seiten in dieser Session nicht live als kompletter Job erneut verifiziert** - der lokale Such-Smoke lief ueber Overpass
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es; fuer Gelbe Seiten reicht der aktuelle statische HTML-Pfad im validierten Fall noch aus
 - **Gelbe Seiten Selektoren bleiben extern abhaengig** - Live-HTML wurde geprueft, kann sich aber jederzeit wieder aendern
 - **Keine automatisierten Parser-/Dedup-/Export-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
 - **Dashboard-Filter nicht breit regressionsgesichert** - Kernpfad und Statusfilter wurden im Browser verifiziert, aber nicht alle Filterkombinationen
-- **Lead-Arbeitsflaechen ohne wiederholbare Testabdeckung** - Detailseite und Statuswechsel wurden real geprueft, aber noch nicht als committed Smoke-Test abgesichert
+- **Lead-Arbeitsflaechen nur im Kernpfad regressionsgesichert** - Detailseite und Statuswechsel sind im Playwright-Smoke abgedeckt, aber nicht alle Varianten
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code
@@ -126,4 +127,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - next-auth v5 beta kann noch API-Aenderungen haben
 - Prisma 7 + Adapter-Pfad ist jetzt build- und live-query-verifiziert, bleibt aber ohne automatisierte Tests regressionsanfaellig
 - Es gibt weiterhin keine CI-Absicherung
-- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise einem wiederholbaren Smoke-Test aktualisiert werden
+- `main` sollte erst nach einer expliziten Release-Entscheidung und idealerweise nach einem zusaetzlichen Gelbe-Seiten-Smoke aktualisiert werden

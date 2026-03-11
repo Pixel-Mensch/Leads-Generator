@@ -58,6 +58,10 @@ leads-scraper/
 |   |-- schema.prisma                 # Datenmodell
 |   `-- migrations/                   # versionierte SQL-Migrationen
 |-- prisma.config.ts                  # Prisma-7-CLI-Konfiguration
+|-- playwright.config.ts              # Playwright Smoke-Test-Konfiguration
+|-- tests/
+|   `-- e2e/
+|       `-- core-workflow.spec.ts     # Register/Login/Projekt/Suche/Export Smoke-Test
 |-- proxy.ts                          # Next.js 16 Route-Protection fuer App-Seiten
 |-- types/next-auth.d.ts              # Session-Typ-Erweiterungen
 |-- docker-compose.yml                # PostgreSQL + App
@@ -177,6 +181,7 @@ API-Schutz:
 - Fire-and-forget Jobs bleiben ohne Queue-System
 - `SCRAPE_MAX_RESULTS` ist nur ein optionaler globaler Hard-Cap; das effektive Lead-Limit kommt aus dem Plan
 - Gelbe Seiten bleibt ein statischer HTML-Scraper mit Cheerio; Playwright ist installiert, aber bewusst noch nicht im aktiven Pfad, solange die relevanten Daten statisch in HTML / `data-*`-Feldern vorliegen
+- Playwright wird jetzt fuer einen schlanken Browser-Smoke-Test des Kernworkflows genutzt, nicht fuer den aktiven Scraper
 - Exporte sind absichtlich nachvollziehbar statt minimal: Kontaktkanaele, Confidence-Signale/-Warnungen und Filter-Metadaten werden fuer CSV und XLSX mit ausgegeben
 - Dashboard, KPI und Export sollen denselben serverseitigen Lead-Filterkontext verwenden; gemeinsame Helfer liegen in `lib/leads/filters.ts`
-- Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und manueller Smoke-Test
+- Release-Gate fuer `main`: `npm run db:generate`, `npm run lint`, `npm run build`, erfolgreiche Live-Migration und ein bestandener Kernworkflow-Smoke-Test

@@ -35,6 +35,7 @@
 - [2026-03-11] Lokaler Kernflow real verifiziert: Register, Credentials-Login, `/api/me`, `/api/projects`, Overpass-Suche mit 50 Leads, CSV/XLSX-Export und authentifizierte Seiten `/`, `/projects`, `/search`
 - [2026-03-11] Vollstaendiger Browser-E2E-Kernflow erfolgreich durchlaufen: Register, Login, Projektanlage, Overpass-Suche, Lead-Detailseite, Statuswechsel und gefilterter CSV/XLSX-Export
 - [2026-03-11] Kernflow-Formulare fuer echte Browser- und Accessibility-Nutzung gehaertet (`htmlFor`/`id`, `aria-label`)
+- [2026-03-11] Playwright-Smoke-Test fuer den Kernworkflow angelegt und lokal gruen ausgefuehrt (`npm run test:e2e:core`)
 
 ---
 
@@ -74,6 +75,11 @@
 - **Status:** TODO
 - **Datei:** `app/jobs/page.tsx` (neu)
 - **Erwartetes Ergebnis:** Uebersicht aller vergangenen Jobs mit Status und Lead-Anzahl
+
+### [P3] Playwright-Smoke-Test auf weitere Filter- und Fehlerfaelle erweitern
+- **Status:** TODO
+- **Datei:** `tests/e2e/core-workflow.spec.ts`
+- **Erwartetes Ergebnis:** mehr Abdeckung fuer Follow-up, Bulk-Status und Fehlerzustaende
 
 ### [P3] Playwright-Scraper fuer JS-gerenderte Quellen
 - **Status:** TODO

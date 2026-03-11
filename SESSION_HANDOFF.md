@@ -4,7 +4,7 @@
 
 ### Ergebnis
 
-**`dev` ist jetzt lokal real startbar und der Kernworkflow wurde im Browser voll durchlaufen. Docker-Postgres, Prisma-Migration, Register/Login, Projektanlage, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads, Lead-Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
+**`dev` ist jetzt lokal real startbar, der Kernworkflow wurde im Browser voll durchlaufen und liegt als Playwright-Smoke-Test vor. Docker-Postgres, Prisma-Migration, Register/Login, Projektanlage, authentifizierte App-Seiten, ein echter Overpass-Suchlauf mit 50 Leads, Lead-Detailseite, Statuswechsel sowie CSV/XLSX-Export wurden erfolgreich gegen laufende lokale Dienste verifiziert. `main` wurde in dieser Session trotzdem nicht automatisch promoted.**
 
 ### Was umgesetzt wurde
 
@@ -39,6 +39,9 @@
 - Top-Navigation und User-Bereich umbrechen auf Mobile sauberer
 - Login-, Register- und Suchformulare verknuepfen Labels jetzt korrekt mit Inputs
 - Projekt- und Listenanlage wurden mit `aria-label` fuer stabile Browser- und Accessibility-Nutzung nachgeschaerft
+- `playwright.config.ts` und `tests/e2e/core-workflow.spec.ts` angelegt
+- `npm run test:e2e:core` in `package.json` hinterlegt
+- `.gitignore` um `playwright-report/` und `test-results/` erweitert
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`
@@ -71,6 +74,7 @@
 - Authentifizierte Seiten -> `/`, `/projects` und `/search` liefern `HTTP 200`
 - Overpass-Smoke -> echter Job auf `COMPLETED`, 50 Leads gespeichert
 - Browser-E2E-Smoke -> Register, Login, Projektanlage, Suche, Lead-Detailseite, Statuswechsel und gefilterte Exporte erfolgreich
+- `npm run test:e2e:core` -> erfolgreich
 - Export-Smoke -> `/api/export/csv` und `/api/export/xlsx` liefern `HTTP 200` gegen den echten Job-Bestand
 - Offline-Migrationscheck -> frisch generierter Empty->Schema-Diff stimmt mit der committed Migration ueberein
 - Live-HTML-Check fuer Gelbe Seiten -> reales Suchergebnis enthielt die jetzt verwendeten `data-webseitelink`, `data-parameters`, `data-detailseiteurl` und `.mod-AdresseKompakt__adress-text` Pfade
@@ -80,7 +84,7 @@
 ### Nicht erfolgreich bzw. noch offen
 
 - Gelbe-Seiten-Quelle wurde in dieser Session nicht erneut als kompletter Suchjob verifiziert
-- Keine automatisierten Tests vorhanden
+- Keine breite Test-Suite vorhanden; aktuell nur der neue Kernworkflow-Smoke-Test
 
 ---
 
@@ -103,7 +107,7 @@
 
 1. Gelbe-Seiten-Quelle als echten Job erneut smoke-testen
 2. Danach Release-Entscheidung fuer `main` explizit treffen
-3. Optional: wiederholbare Smoke-Test-Abdeckung committen
+3. Optional: Smoke-Test um Follow-up-, Bulk- und Fehlerpfade erweitern
 
 ---
 
