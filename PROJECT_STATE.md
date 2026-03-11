@@ -1,67 +1,72 @@
 # PROJECT_STATE.md
 
 ## Projektzweck
-**Leads Scraper** — Lokal nutzbares MVP eines B2B Lead Generators.
-Sammelt öffentlich auffindbare Unternehmensdaten (Firmenname, Website, E-Mail, Telefon, Adresse, Branche) anhand von Branche, Ort und Radius. Speichert strukturiert in PostgreSQL, stellt Vertriebsstatus und CSV/XLSX-Export bereit.
+**Leads Scraper** — B2B Lead Generator mit SaaS-fähiger Architektur.
+Sammelt öffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
+Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
+Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11)
+## Aktueller Stand (2026-03-11, Session 3)
 
-**Phase 1 MVP: Code vollständig implementiert. Noch nicht produktiv getestet (Build + DB stehen aus).**
+**SaaS Foundation implementiert auf `feat/saas-foundation`. Build-Test und DB noch ausstehend.**
 
 ## Tech Stack
 
 | Technologie | Version | Status |
 |-------------|---------|--------|
-| Next.js App Router | 16.1.6 | initialisiert |
+| Next.js App Router | 16.1.6 | aktiv |
 | TypeScript | 5.x | aktiv |
 | Tailwind CSS | 4.x | aktiv |
-| Prisma ORM | 7.x | Schema definiert, Migration ausstehend |
-| PostgreSQL | 16 | Docker Compose bereit, DB noch nicht gestartet |
-| Cheerio | 1.x | aktiv (Gelbe Seiten Scraper) |
-| Playwright | 1.x | installiert, noch kein aktiver Scraper |
-| ExcelJS | 4.x | aktiv (XLSX Export) |
-| csv-stringify | 6.x | aktiv (CSV Export) |
-| Zod | 4.x | aktiv (API Validation) |
+| Prisma ORM | 7.x | Schema fertig, Migration ausstehend |
+| PostgreSQL | 16 | Docker Compose bereit |
+| next-auth | v5 beta | JWT-Auth implementiert |
+| bcryptjs | 2.x | Passwort-Hashing aktiv |
+| Cheerio | 1.x | Gelbe Seiten Scraper |
+| Playwright | 1.x | installiert, kein aktiver Scraper |
+| ExcelJS | 4.x | XLSX Export |
+| csv-stringify | 6.x | CSV Export |
+| Zod | 4.x | API Validation |
 
 ## Implementierte Module
 
-| Modul | Datei(en) | Status |
-|-------|-----------|--------|
-| Datenmodell | prisma/schema.prisma | fertig |
-| DB Client | lib/db.ts | fertig |
-| Overpass Scraper (OSM) | lib/scraper/sources/overpass.ts | fertig |
-| Gelbe Seiten Scraper | lib/scraper/sources/gelbeseiten.ts | fertig |
-| Job Orchestrator | lib/scraper/orchestrator.ts | fertig |
-| Deduplizierung | lib/scraper/deduplicator.ts | fertig |
-| Normalizer (Phone, URL, Email) | lib/parser/normalize.ts | fertig |
-| CSV Export | lib/export/csv.ts | fertig |
-| XLSX Export | lib/export/xlsx.ts | fertig |
-| API: Jobs CRUD | app/api/jobs/ | fertig |
-| API: Leads CRUD | app/api/leads/ | fertig |
-| API: Export | app/api/export/ | fertig |
-| UI: Dashboard / Lead-Liste | app/page.tsx | fertig |
-| UI: Suchmaske | app/search/page.tsx | fertig |
-| UI: Lead-Detailseite | app/leads/[id]/page.tsx | fertig |
-| UI: LeadsTable (responsive) | components/leads/LeadsTable.tsx | fertig |
-| UI: JobStatus mit Auto-Poll | components/leads/JobStatus.tsx | fertig |
-| Docker Setup | docker-compose.yml, Dockerfile | fertig |
-
-## Abgeschlossene Arbeit
-
-- [2026-03-11] Repo + Git-Workflow initialisiert
-- [2026-03-11] .gitignore-Bug behoben: `*.json` hatte package.json/tsconfig.json ausgeschlossen
-- [2026-03-11] Vollständiger MVP-Stack implementiert (Session 2)
+| Modul | Status |
+|-------|--------|
+| User-Modell (plan, role, billing fields) | fertig |
+| Project-Modell (soft delete) | fertig |
+| LeadList-Modell | fertig |
+| next-auth JWT Auth | fertig |
+| Middleware (Routenschutz) | fertig |
+| requireAuth() Helper | fertig |
+| Plan-Limits (FREE/PRO/ENTERPRISE) | fertig |
+| /api/register | fertig |
+| /api/me (usage stats) | fertig |
+| /api/projects CRUD | fertig |
+| /api/projects/[id]/lists | fertig |
+| Alle Jobs/Leads/Export APIs | ownership-gesichert, fertig |
+| Login UI | fertig |
+| Register UI | fertig |
+| Projekte UI (Liste + Detail) | fertig |
+| NavUser (Plan-Badge, Sign-out) | fertig |
+| Suchmaske mit Projekt-Auswahl | fertig |
+| Billing-Felder im Schema | vorbereitet, kein Code |
+| Overpass Scraper | fertig |
+| Gelbe Seiten Scraper | fertig |
+| CSV/XLSX Export | fertig |
 
 ## Bekannte Probleme / Lücken
 
-- Prisma Migration noch nicht ausgeführt — DB läuft noch nicht
-- `npm run build` noch nicht ausgeführt — TypeScript-Fehler möglich
-- Gelbe Seiten Selektoren heuristisch — können bei HTML-Änderungen brechen
-- Kein Test-Suite
-- Background Jobs laufen im Request-Kontext (fire-and-forget) — kein persistenter Queue
+- **Build nicht ausgeführt** — `npm run build` steht aus; TypeScript-Fehler möglich
+- **DB Migration ausstehend** — neues Schema (User, Project, LeadList) noch nicht migriert
+- **AUTH_SECRET muss gesetzt werden** — in .env, nie committen
+- **Playwright nicht aktiv** — installiert aber kein Source nutzt es
+- **Gelbe Seiten Selektoren heuristisch** — können brechen
+- **Kein Test-Suite** — keine Unit/Integration Tests
+- **Admin-UI fehlt** — ADMIN-Rolle im Schema, aber kein Admin-Bereich
+- **Einladungslogik fehlt** — noch nicht implementiert
+- **Plan-Upgrade Flow fehlt** — Stripe vorbereitet aber kein Code
 
-## Aktuelle Risiken
+## Risiken
 
-- Gelbe Seiten scraping: respektvoll und rate-limited, aber ToS im Auge behalten
-- OSM Datenlücken: kleine Unternehmen oft nicht in OpenStreetMap gepflegt
-- Noch nicht produktiv validiert — Build-Test ist zwingend nächster Schritt
+- next-auth v5 beta: kann noch API-Änderungen haben
+- Zod v4: leicht unterschiedliche API zu v3 (prüfen beim Build)
+- Migration muss sorgfältig getestet werden (neue Non-Null FKs)

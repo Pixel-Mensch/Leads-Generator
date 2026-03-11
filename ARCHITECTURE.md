@@ -1,116 +1,150 @@
 # ARCHITECTURE.md
 
-> Stand: 2026-03-11 — MVP Session 1
+> Stand: 2026-03-11 — MVP Session 2 (SaaS Foundation)
 
 ## High-Level Struktur
 
 ```
 leads-scraper/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx                # Root Layout, Navigation
-│   ├── page.tsx                  # Dashboard: Lead-Liste, Filter, Paginierung, Export
-│   ├── search/page.tsx           # Suchmaske (Branche, Ort, Radius, Quelle)
-│   ├── leads/[id]/page.tsx       # Lead-Detailseite
+├── app/
+│   ├── layout.tsx                    # Root Layout, Session-aware Nav
+│   ├── page.tsx                      # Dashboard: Lead-Liste, Filter, Export
+│   ├── login/page.tsx                # Anmelde-Seite (next-auth Credentials)
+│   ├── register/page.tsx             # Registrierung
+│   ├── search/page.tsx               # Suchmaske mit Projekt-Auswahl
+│   ├── leads/[id]/page.tsx           # Lead-Detailseite
+│   ├── projects/page.tsx             # Projekt-Übersicht
+│   ├── projects/[id]/page.tsx        # Projekt-Detail: Jobs + Listen
 │   └── api/
-│       ├── jobs/route.ts         # POST (erstellen), GET (Liste)
-│       ├── jobs/[id]/route.ts    # GET (Status), DELETE
-│       ├── jobs/[id]/run/route.ts # POST (Job starten, fire-and-forget)
-│       ├── leads/route.ts        # GET (Liste, paginiert, gefiltert)
-│       ├── leads/[id]/route.ts   # GET, PATCH (Status/Notizen), DELETE
-│       ├── export/csv/route.ts   # GET → CSV Download
-│       └── export/xlsx/route.ts  # GET → XLSX Download
+│       ├── auth/[...nextauth]/       # next-auth Handler
+│       ├── register/route.ts         # POST: Registrierung (öffentlich)
+│       ├── me/route.ts               # GET: User-Profil + Usage-Stats
+│       ├── projects/route.ts         # GET/POST: Projektliste
+│       ├── projects/[id]/route.ts    # GET/PATCH/DELETE (soft delete)
+│       ├── projects/[id]/lists/      # GET/POST: Lead-Listen
+│       ├── jobs/route.ts             # POST: Job erstellen (limit-geprüft)
+│       ├── jobs/[id]/route.ts        # GET/DELETE (ownership-geschützt)
+│       ├── jobs/[id]/run/route.ts    # POST: Job starten (ownership)
+│       ├── leads/route.ts            # GET: user-scoped, paginated
+│       ├── leads/[id]/route.ts       # GET/PATCH/DELETE (ownership)
+│       ├── export/csv/route.ts       # GET: CSV Download (user-scoped)
+│       └── export/xlsx/route.ts      # GET: XLSX Download (user-scoped)
 ├── components/
+│   ├── NavUser.tsx                   # User-Badge, Plan-Anzeige, Abmelden
 │   └── leads/
-│       ├── LeadsTable.tsx        # Responsive Tabelle + Status-Inline-Edit
-│       └── JobStatus.tsx         # Job-Statusanzeige mit Auto-Poll
+│       ├── LeadsTable.tsx            # Responsive Tabelle + Inline-Edit
+│       └── JobStatus.tsx             # Job-Statusbanner mit Auto-Poll
 ├── lib/
-│   ├── db.ts                     # Prisma Client Singleton
+│   ├── db.ts                         # Prisma Client Singleton
+│   ├── auth.ts                       # next-auth v5 Konfiguration (JWT)
+│   ├── session.ts                    # requireAuth() Helper
+│   ├── limits.ts                     # Plan-Limits Konstanten + Checker
 │   ├── scraper/
-│   │   ├── orchestrator.ts       # Job-Runner: wählt Quelle, scrapt, dedupliziert, speichert
-│   │   ├── deduplicator.ts       # Domain, Phone, Name Deduplizierung
+│   │   ├── orchestrator.ts           # Job Runner
+│   │   ├── deduplicator.ts           # Domain/Phone/Name Dedup
 │   │   └── sources/
-│   │       ├── overpass.ts       # OpenStreetMap / Overpass API (frei, ToS-konform)
-│   │       └── gelbeseiten.ts    # Gelbe Seiten DE (Cheerio, rate-limited)
-│   ├── parser/
-│   │   └── normalize.ts          # Phone, URL, Email Normalisierung + Confidence Score
+│   │       ├── overpass.ts           # OpenStreetMap / Overpass API
+│   │       └── gelbeseiten.ts        # Gelbe Seiten (Cheerio)
+│   ├── parser/normalize.ts           # Phone, URL, Email + Confidence
 │   └── export/
-│       ├── csv.ts                # CSV mit UTF-8 BOM (Excel-kompatibel)
-│       └── xlsx.ts               # XLSX mit ExcelJS (Header-Styling, AutoFilter)
-├── prisma/
-│   └── schema.prisma             # Datenmodell (SearchJob, Lead, Enums)
-├── docker-compose.yml            # PostgreSQL + App Container
-├── Dockerfile                    # Multi-Stage Build (Node 20 Alpine, standalone)
-├── next.config.ts                # standalone output, serverExternalPackages
-├── package.json                  # Dependencies + DB-Skripte
-└── .env.example                  # Vorlage für Umgebungsvariablen
+│       ├── csv.ts                    # CSV mit BOM
+│       └── xlsx.ts                   # XLSX mit ExcelJS
+├── middleware.ts                     # next-auth JWT-Schutz aller Routen
+├── types/next-auth.d.ts              # Session-Typ-Erweiterungen
+├── prisma/schema.prisma              # Datenmodell
+├── docker-compose.yml                # PostgreSQL + App
+├── Dockerfile                        # Multi-Stage Build
+└── .env.example                      # Umgebungsvariablen-Vorlage
 ```
 
-## Datenmodell
+## Datenmodell (aktuell)
 
-### SearchJob
+### User
 | Feld | Typ | Beschreibung |
 |------|-----|-------------|
 | id | cuid | Primärschlüssel |
-| query | String | Suchbegriff (Branche) |
-| location | String | Ort |
-| radius | Int? | Radius in km |
-| source | String | overpass / gelbeseiten / both |
-| status | JobStatus | PENDING / RUNNING / COMPLETED / FAILED |
-| totalFound | Int | Anzahl gefundener Rohdaten |
-| error | String? | Fehlermeldung bei FAILED |
+| email | String unique | Login-E-Mail |
+| name | String? | Anzeigename |
+| passwordHash | String? | bcrypt (12 Rounds) |
+| role | UserRole | ADMIN / USER |
+| plan | Plan | FREE / PRO / ENTERPRISE |
+| planExpiresAt | DateTime? | Plan-Ablaufdatum |
+| stripeCustomerId | String? unique | Billing-Vorbereitung |
+| stripeSubscriptionId | String? unique | Billing-Vorbereitung |
+| isActive | Boolean | Soft-Disable möglich |
 
-### Lead
+### Project
 | Feld | Typ | Beschreibung |
 |------|-----|-------------|
 | id | cuid | Primärschlüssel |
-| companyName | String | Firmenname |
-| website | String? | Normalisierte URL |
-| email | String? | Normalisierte E-Mail |
-| phone | String? | Normalisierte Telefonnummer |
-| address | String? | Vollständige Adresse |
-| city | String? | Ort |
-| category | String? | Branche / Kategorie |
-| sourceUrl | String? | Direkte URL des Treffers |
-| confidence | Float? | 0–1, berechneter Qualitätsscore |
-| status | LeadStatus | NEW / CONTACTED / INTERESTED / NOT_INTERESTED / CONVERTED / INVALID |
-| notes | String? | Freitext für Vertriebsnotizen |
-| contactedAt | DateTime? | Zeitpunkt der Kontaktaufnahme |
-| jobId | String | FK → SearchJob |
+| name | String | Projektname |
+| description | String? | Optionale Beschreibung |
+| userId | String FK | Eigentümer |
+| deletedAt | DateTime? | Soft Delete |
 
-## Hauptfluss: Lead-Erfassung
+### LeadList
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| id | cuid | Primärschlüssel |
+| name | String | Listenname |
+| projectId | String FK | Zugehöriges Projekt |
+
+### SearchJob (erweitert)
+| Feld | Beschreibung |
+|------|-------------|
+| userId | FK → User (nullable, Ownership) |
+| projectId | FK → Project (nullable) |
+| (alle MVP-Felder wie bisher) | |
+
+### Lead (erweitert)
+| Feld | Beschreibung |
+|------|-------------|
+| listId | FK → LeadList (optional, nullable) |
+| (alle MVP-Felder wie bisher) | |
+
+## Ownership-Modell
 
 ```
-User: Suchmaske ausfüllen (query, location, radius, source)
-  → POST /api/jobs           (Job anlegen, Status: PENDING)
-  → POST /api/jobs/:id/run   (Job starten, fire-and-forget, 202 Accepted)
-  → orchestrator.runJob()
-      → geocodeLocation()    (Nominatim OSM → lat/lon)
-      → scrapeOverpass()     (Overpass API → strukturierte Daten)
-      → scrapeGelbeSeiten()  (Cheerio auf gelbeseiten.de, rate-limited)
-      → deduplicateLeads()   (Domain + Phone + Name dedup)
-      → db.lead.createMany() (Prisma, skipDuplicates)
-      → Job Status: COMPLETED
-  → UI pollt /api/jobs/:id alle 4s
-  → Dashboard zeigt Leads, nach Confidence sortiert
+User
+└── Project (userId, soft delete)
+    ├── LeadList (projectId)
+    │   └── Lead.listId (optional)
+    └── SearchJob (projectId + userId)
+        └── Lead (jobId) — Ownership via job.userId
 ```
 
-## Technologie-Entscheidungen
+API-Schutz:
+- `requireAuth()` in jeder Route: gibt 401 bei fehlendem JWT
+- Alle Queries filtern per `userId: session.user.id`
+- Ownership-Verletzungen geben 404 (nicht 403 — kein Information Leak)
 
-| Technologie | Begründung |
-|-------------|-----------|
-| Next.js 16 App Router | Server Components, API Routes, standalone build |
-| Prisma 7 + PostgreSQL | Typsicheres ORM, migrations-fähig |
-| Overpass API (OSM) | Kostenlos, ToS-konform, strukturierte Daten |
-| Gelbe Seiten | Öffentliches Verzeichnis, Cheerio reicht für HTML |
-| Playwright | Installiert, bereit für JS-heavy Quellen in Phase 2 |
-| ExcelJS | XLSX mit Styling und AutoFilter |
-| csv-stringify | Zuverlässig, BOM-Support für Excel |
-| Zod | Schema-Validierung für API-Inputs |
-| Tailwind CSS 4 | Utility-first, kein schweres Framework |
+## Plan-Limits (lib/limits.ts)
 
-## Bekannte Architekturentscheide und Grenzen
+| Plan | Jobs/Monat | Leads/Job | Projekte |
+|------|-----------|-----------|---------|
+| FREE | 10 | 50 | 2 |
+| PRO | 200 | 200 | 20 |
+| ENTERPRISE | ∞ | 500 | ∞ |
 
-- **Background Jobs:** Fire-and-forget im Request-Kontext (MVP). Kein BullMQ/Queue. Bei langen Jobs kann das Node-Timeout zuschlagen. Für SaaS-Erweiterung: pg-boss oder BullMQ nachrüsten.
-- **Kein Auth:** MVP ist lokal. Auth-Schicht kann über next-auth oder eigene Middleware später ergänzt werden.
-- **Rate Limiting:** Gelbe Seiten: 2s Delay pro Seite (konfigurierbar via SCRAPE_DELAY_MS). Overpass hat eingebautes Throttling.
-- **Playwright:** Installiert, aber noch kein aktiver Scraper nutzt es. Bereit für JS-gerenderte Quellen.
+## Authentifizierung
+
+- **next-auth v5 beta** mit Credentials Provider (Email + Passwort)
+- **JWT-Strategie** — kein Session-Table nötig
+- **AUTH_SECRET** aus .env — nie committen
+- Passwörter mit **bcrypt (12 Rounds)** gehasht
+- Middleware schützt alle Routen außer `/login`, `/register`, `/api/auth`, `/api/register`
+
+## Billing-Vorbereitung
+
+- `User.stripeCustomerId` und `User.stripeSubscriptionId` im Schema
+- `User.plan` und `User.planExpiresAt` bereit
+- PLAN_LIMITS als Code-Konstanten — beim Plan-Upgrade einfach DB-Feld setzen
+- Stripe-Code: **nicht vorhanden** — bewusste Entscheidung für MVP
+
+## Wichtige Architekturentscheide
+
+- Kein Multi-Tenant Magic: einfache `userId`-FKs auf allen Ressourcen
+- Kein Session-Table: JWT reicht für MVP + SaaS-Start
+- Soft Delete nur auf Projects: Daten bleiben erhalten
+- Kein RBAC-Framework: `UserRole` enum reicht (ADMIN-Flag für spätere Admin-UI)
+- Fire-and-forget Jobs bleiben so: kein Queue-System für MVP

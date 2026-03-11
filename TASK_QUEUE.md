@@ -15,34 +15,39 @@
 - [2026-03-11] Tech-Stack festgelegt (TypeScript, Next.js, Prisma, PostgreSQL, Cheerio)
 - [2026-03-11] MVP vollständig implementiert: Scraper, Parser, Exporte, API, UI, Docker
 - [2026-03-11] .gitignore-Bug behoben (*.json hatte Konfig-Dateien ausgeschlossen)
+- [2026-03-11] SaaS Foundation implementiert: User/Project/LeadList, next-auth JWT, Middleware, Plan-Limits, Auth-UI, Projekt-UI
 
 ---
 
 ## Aktive Aufgaben
 
+### [P1] AUTH_SECRET in .env setzen
+- **Status:** TODO — App startet nicht ohne diesen Wert
+- **Befehl:** `openssl rand -base64 32` → in .env als AUTH_SECRET eintragen
+- **Datei:** .env (nicht committen!)
+
 ### [P1] Build-Test ausführen und TypeScript-Fehler beheben
 - **Status:** TODO — zwingend vor Produktivbetrieb
-- **Befehl:** `npm run build`
-- **Dateien:** Alle lib/, app/, components/ Dateien
+- **Befehl:** `npm run db:generate && npm run build`
+- **Bekannte Risiken:** next-auth v5 beta API, Zod v4 (flatten-Aufrufe), Prisma generierte Typen
 - **Erwartetes Ergebnis:** Build durchläuft ohne Fehler
-- **Blocker:** Keine — kann sofort ausgeführt werden
 
 ### [P1] Datenbank starten und Migration ausführen
 - **Status:** TODO
 - **Befehle:**
   ```bash
-  cp .env.example .env        # und Werte anpassen
+  cp .env.example .env        # Werte anpassen (AUTH_SECRET, DATABASE_URL)
   docker compose up db -d
   npm run db:migrate
   ```
 - **Dateien:** prisma/schema.prisma, .env
-- **Erwartetes Ergebnis:** PostgreSQL läuft, Tabellen existieren
+- **Hinweis:** Schema hat neue Non-Null FKs (User, Project, LeadList) — Migration sorgfältig testen bei existierenden Daten
+- **Erwartetes Ergebnis:** PostgreSQL läuft, alle Tabellen existieren inkl. User/Project/LeadList
 
-### [P1] Erste echte Suche testen
+### [P1] Erste echte Suche als eingeloggter User testen
 - **Status:** TODO
-- **Schritte:** App starten (`npm run dev`), Suche "Restaurant" in "Berlin", Ergebnis prüfen
-- **Dateien:** lib/scraper/sources/overpass.ts
-- **Erwartetes Ergebnis:** Leads erscheinen in der UI, Export funktioniert
+- **Schritte:** Registrieren → Login → Projekt anlegen → Suche starten → Ergebnis prüfen
+- **Erwartetes Ergebnis:** Leads erscheinen user-scoped in der UI, Export funktioniert
 
 ### [P2] Gelbe Seiten Selektoren validieren
 - **Status:** TODO
@@ -50,7 +55,18 @@
 - **Problem:** Cheerio-Selektoren sind heuristisch, können brechen
 - **Erwartetes Ergebnis:** Reale Ergebnisse aus gelbeseiten.de, oder Selektoren angepasst
 
-### [P2] Playwright-Scraper für JS-gerenderte Quellen
+### [P2] Lead-Detail-Link aus der Tabelle ergänzen
+- **Status:** TODO
+- **Datei:** components/leads/LeadsTable.tsx
+- **Problem:** /leads/[id] existiert, aber kein Link aus der Tabelle heraus
+- **Erwartetes Ergebnis:** Klick auf Firmenname öffnet /leads/:id
+
+### [P2] README Setup-Anleitung aktualisieren
+- **Status:** TODO
+- **Datei:** README.md
+- **Inhalt:** AUTH_SECRET generieren, Registration-Flow, docker compose up, npm run dev
+
+### [P3] Playwright-Scraper für JS-gerenderte Quellen
 - **Status:** TODO
 - **Datei:** lib/scraper/sources/ (neue Datei)
 - **Erwartetes Ergebnis:** Mindestens eine weitere Quelle via Playwright erschlossen
@@ -60,40 +76,34 @@
 - **Dateien:** lib/parser/normalize.ts, lib/scraper/deduplicator.ts
 - **Erwartetes Ergebnis:** Zuverlässige Tests, die Randfälle abdecken
 
-### [P3] README aktualisieren (Setup-Anleitung fertigstellen)
-- **Status:** TODO
-- **Datei:** README.md
-- **Erwartetes Ergebnis:** Vollständige Anleitung für lokales Setup inkl. Docker
-
 ### [P3] Suchhistorie / Job-Übersicht als eigene Seite
 - **Status:** TODO
 - **Datei:** app/jobs/page.tsx (neu)
 - **Erwartetes Ergebnis:** Übersicht aller vergangenen Jobs mit Status und Lead-Anzahl
 
-### [P3] Lead-Detail-Link aus der Tabelle
-- **Status:** TODO
-- **Datei:** components/leads/LeadsTable.tsx
-- **Problem:** Detailseite existiert, aber noch kein Link aus der Tabelle heraus
-- **Erwartetes Ergebnis:** Klick auf Firmenname öffnet /leads/:id
+### [P4] Plan-Upgrade Flow (Stripe)
+- **Status:** Bewusst zurückgestellt — Stripe-Felder im Schema vorbereitet
+- **Voraussetzung:** Stripe-Account, STRIPE_SECRET_KEY in .env
+- **Erwartetes Ergebnis:** User kann Plan upgraden, Limits werden sofort angewendet
 
-### [P4] Playwright Headless für captcha-freie dynamische Seiten
-- **Status:** Bereit für Implementierung wenn Bedarf besteht
-- **Hinweis:** Nur für Quellen ohne Captcha/Anti-Bot, ethisch vertretbar
+### [P4] Admin-UI
+- **Status:** TODO — ADMIN-Rolle im Schema vorhanden, kein UI
+- **Erwartetes Ergebnis:** Einfache Admin-Seite: User-Liste, Plan-Änderung, isActive toggle
+
+### [P4] Einladungslogik
+- **Status:** TODO
+- **Erwartetes Ergebnis:** User kann andere per E-Mail einladen (Team-Feature)
 
 ### [P4] Rate Limiting auf API-Ebene
-- **Status:** TODO — für SaaS-Vorbereitung
-- **Erwartetes Ergebnis:** API hat einfaches Rate Limiting (z.B. per IP)
-
-### [P4] Auth / Zugriffsschutz
-- **Status:** TODO — nicht für lokales MVP nötig
-- **Erwartetes Ergebnis:** Einfacher Passwortschutz oder next-auth für SaaS-Ausbau
+- **Status:** TODO
+- **Erwartetes Ergebnis:** API hat einfaches Rate Limiting per IP (zusätzlich zu Plan-Limits)
 
 ---
 
-## Bewusst nicht umgesetzt (MVP-Scope)
+## Bewusst nicht umgesetzt (Scope-Entscheidungen)
 
-- Keine Benutzerverwaltung / Multi-Tenant
-- Keine Abrechnung / SaaS-Logik
-- Kein komplexes Queue-System (pg-boss / BullMQ) — fire-and-forget reicht für MVP
-- Kein Geocoding / Kartenansicht (vorbereitet, aber nicht implementiert)
+- Kein Background-Queue (BullMQ/pg-boss) — fire-and-forget reicht für MVP
+- Kein komplexes RBAC-Framework — UserRole enum reicht für MVP
+- Kein Session-Table — JWT reicht für MVP + SaaS-Start
+- Kein Geocoding / Kartenansicht
 - Keine CI/CD Pipeline
