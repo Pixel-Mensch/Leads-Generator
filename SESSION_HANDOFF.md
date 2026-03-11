@@ -75,9 +75,9 @@
 
 - **Branch:** `dev`
 - **Relevante neue Commits auf `dev`:**
-  - `d935daf` - `fix: restore prisma build and next runtime path`
-  - `fbd9f25` - `chore: add migration baseline and db workflow scripts`
-  - Folge-Commits danach haerten SaaS-Auth/Ownership, surfacen Usage-/Limit-Feedback in der UI und halten den Handoff synchron
+  - `a59d27d` - `fix: sharpen dashboard lead workflow`
+  - `e0180ed` - `fix: improve lead action surfaces`
+  - Vorherige Stabilisierung darunter: Prisma-/Build-Reparatur, SaaS-Haertung sowie Scraper-/Export-Qualitaetsfixes
 - **Relevanter `main`-Stand:** `c1a2276`
 - **Status von `main`:** nicht freigegeben
 
@@ -114,6 +114,8 @@
 | `lib/scraper/sources/gelbeseiten.ts` | live-validierte Gelbe-Seiten-Heuristiken |
 | `lib/export/leadExport.ts` | Export-View, Kontaktkanaele und Confidence-Transparenz |
 | `lib/leads/filters.ts` | gemeinsamer Filterkontext fuer Leads, KPI und Export |
+| `components/leads/LeadsTable.tsx` | Schnellaktionen, Mobile-Karten und Inline-Arbeitsflaeche |
+| `app/leads/[id]/page.tsx` | Detailseite fuer taegliche Vertriebsarbeit |
 
 ---
 
