@@ -10,7 +10,12 @@ import { db } from "@/lib/db";
 import { scrapeOverpass } from "./sources/overpass";
 import { scrapeGelbeSeiten } from "./sources/gelbeseiten";
 import { deduplicateLeads } from "./deduplicator";
-import { computeConfidence } from "@/lib/parser/normalize";
+import {
+  computeConfidence,
+  extractDomain,
+  normalizeComparableText,
+  normalizeCompanyName,
+} from "@/lib/parser/normalize";
 import { getLimits } from "@/lib/limits";
 import type { RawLead } from "./sources/overpass";
 
@@ -107,40 +112,41 @@ export async function runJob(jobId: string): Promise<void> {
 
     const existing = await db.lead.findMany({
       where: { jobId },
-      select: { companyName: true, phone: true, website: true },
+      select: { companyName: true, city: true, phone: true, website: true },
     });
     const existingDomains = new Set(
       existing
-        .map((lead) => {
-          try {
-            return new URL(lead.website ?? "").hostname.replace(/^www\./, "");
-          } catch {
-            return null;
-          }
-        })
+        .map((lead) => extractDomain(lead.website))
         .filter(Boolean)
     );
     const existingPhones = new Set(
       existing.map((lead) => lead.phone?.replace(/\D/g, "")).filter(Boolean)
     );
     const existingNames = new Set(
-      existing.map((lead) => lead.companyName.toLowerCase().trim())
+      existing
+        .map((lead) => {
+          const normalizedName = normalizeCompanyName(lead.companyName);
+          const normalizedCity = normalizeComparableText(lead.city);
+          return normalizedName && normalizedCity
+            ? `${normalizedName}::${normalizedCity}`
+            : null;
+        })
+        .filter(Boolean)
     );
 
     const toInsert = rawLeads.filter((lead) => {
-      const domain = (() => {
-        try {
-          return lead.website
-            ? new URL(lead.website).hostname.replace(/^www\./, "")
-            : null;
-        } catch {
-          return null;
-        }
-      })();
+      const domain = extractDomain(lead.website);
       const phone = lead.phone?.replace(/\D/g, "");
+      const normalizedName = normalizeCompanyName(lead.companyName);
+      const normalizedCity = normalizeComparableText(lead.city);
+      const nameKey =
+        normalizedName && normalizedCity
+          ? `${normalizedName}::${normalizedCity}`
+          : null;
+
       if (domain && existingDomains.has(domain)) return false;
       if (phone && phone.length >= 7 && existingPhones.has(phone)) return false;
-      if (existingNames.has(lead.companyName.toLowerCase().trim())) return false;
+      if (nameKey && existingNames.has(nameKey)) return false;
       return true;
     });
 

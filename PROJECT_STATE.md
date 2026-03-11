@@ -25,6 +25,9 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - `SearchJob`-Re-Runs sind auf `PENDING` begrenzt
 - Suchlauf-Caps respektieren jetzt echte Plan-Limits statt nur `SCRAPE_MAX_RESULTS`
 - E-Mail-Adressen werden bei Register und Login normalisiert
+- `normalizeUrl()` behandelt Schemes, Tracking-Parameter und Nicht-HTTP-Links jetzt sauberer
+- Dedup-Merge fuellt nicht nur Luecken, sondern behaelt reichere Kontaktfelder und kombiniert Quellen nachvollziehbar
+- Overpass-Fallback escaped Freitext sauberer und DB-Dedup gegen vorhandene Leads nutzt jetzt normalisierte Name+Ort-Keys
 
 ## Tech Stack
 
@@ -67,7 +70,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | NavUser (Plan-Badge, Sign-out) | fertig |
 | Suchmaske mit Projekt-Auswahl | fertig, mit Usage-Hinweisen |
 | Overpass Scraper | fertig |
-| Gelbe Seiten Scraper | fertig |
+| Gelbe Seiten Scraper | fertig, Live-HTML noch heuristisch |
 | Normalisierung (Phone/URL/Email/Domain) | verbessert |
 | Confidence Scoring (transparent, mit Signalen) | verbessert |
 | Deduplizierung (Merge-Logik, stadtbasiert) | verbessert |
@@ -93,6 +96,7 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 - **Keine Test-Suite** - keine Unit- oder Integration-Tests vorhanden
 - **Playwright nicht aktiv** - installiert, aber keine Quelle nutzt es
 - **Gelbe Seiten Selektoren heuristisch** - koennen brechen
+- **Keine automatisierten Parser-/Dedup-Tests** - reproduzierbare Inline-Checks gemacht, aber noch keine committed Testdateien
 - **Admin-UI fehlt** - ADMIN-Rolle im Schema, aber kein Admin-Bereich
 - **Einladungslogik fehlt** - noch nicht implementiert
 - **Plan-Upgrade Flow fehlt** - Stripe vorbereitet, aber kein Code

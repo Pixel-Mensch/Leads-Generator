@@ -25,6 +25,9 @@
 - Scraper respektiert echte Plan-Limits fuer Leads pro Job
 - Protected Pages leiten jetzt real auf `/login` um
 - Search-/Project-UI zeigen Limit- und Fehlerfeedback
+- URL-, Firmennamen- und Vergleichsnormalisierung wurden fuer reale Konfliktfaelle gehaertet
+- Dedup-Merge behaelt reichere Kontaktfelder, kombiniert Quellen nachvollziehbar und aktualisiert Schluessel nach Merges korrekt
+- Overpass-Freitext-Fallback escaped Regex sauberer, und DB-Dedup nutzt jetzt normalisierte Name+Ort-Keys
 
 **DB / Ops:**
 - Initial-Migration erzeugt: `prisma/migrations/20260311081500_init/migration.sql`

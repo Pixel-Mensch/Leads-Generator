@@ -26,6 +26,7 @@
 - [2026-03-11] Dev-Boot lokal geprueft (`GET /login -> HTTP 200`)
 - [2026-03-11] SaaS-Audit abgeschlossen: API-Ownership, Listen-Limits, E-Mail-Normalisierung und PENDING-only Job-Start gehaertet
 - [2026-03-11] Protected-Page-Redirect real verifiziert (`GET /projects -> 307 /login`)
+- [2026-03-11] Kernqualitaet gehaertet: URL-/Firmennamen-Normalisierung, Dedup-Merge und Overpass-Fallback verbessert
 
 ---
 
