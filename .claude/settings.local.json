@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:/Users/marck/Desktop/Selfmade/Leads-Scraper -type f -name *)",
+      "Bash(npm --version)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --yes --name \"leads-scraper\")",
+      "Bash(npx create-next-app@latest tmp-init --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(cp tmp-init/package.json .)",
+      "Bash(cp tmp-init/tsconfig.json .)",
+      "Bash(cp tmp-init/next.config.ts .)",
+      "Bash(cp tmp-init/postcss.config.mjs .)",
+      "Bash(cp tmp-init/eslint.config.mjs .)",
+      "Bash(cp tmp-init/next-env.d.ts .)",
+      "Bash(cp -r tmp-init/public .)",
+      "Bash(cp -r tmp-init/app .)",
+      "Bash(rm -rf tmp-init)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"const pkg = require\\(''./package.json''\\); console.log\\(pkg.dependencies[''next-auth'']\\)\")",
+      "Bash(mkdir -p c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/api/auth/[...nextauth])",
+      "Bash(mkdir -p c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/projects/[id]/lists/[listId])",
+      "Bash(mkdir -p c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/api/projects/[id]/lists)",
+      "Bash(mkdir -p c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/api/projects/[id])",
+      "Bash(head -3 c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/api/jobs/[id]/route.ts)",
+      "Bash(head -3 c:/Users/marck/Desktop/Selfmade/Leads-Scraper/app/api/leads/[id]/route.ts)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}
