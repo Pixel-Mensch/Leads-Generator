@@ -6,9 +6,9 @@ Sammelt öffentlich auffindbare Unternehmensdaten nach Branche, Ort und Radius.
 Speichert in PostgreSQL, stellt Vertriebsstatus, Projekte, Lead-Listen und CSV/XLSX-Export bereit.
 Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
-## Aktueller Stand (2026-03-11, Session 3)
+## Aktueller Stand (2026-03-11, Session 4)
 
-**SaaS Foundation implementiert auf `feat/saas-foundation`. Build-Test und DB noch ausstehend.**
+**Datenqualität-Session abgeschlossen auf `feat/quality-improvements`. Build-Test und DB-Migration noch ausstehend.**
 
 ## Tech Stack
 
@@ -51,12 +51,17 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 | Billing-Felder im Schema | vorbereitet, kein Code |
 | Overpass Scraper | fertig |
 | Gelbe Seiten Scraper | fertig |
-| CSV/XLSX Export | fertig |
+| **Normalisierung (Phone/URL/Email/Domain)** | **verbessert Session 4** |
+| **Confidence Scoring (transparent, mit Signalen)** | **verbessert Session 4** |
+| **Deduplizierung (Merge-Logik, stadtbasiert)** | **verbessert Session 4** |
+| **sourceName Tracking (DB + Exporte)** | **neu Session 4** |
+| **CSV Export (Quelle, Qualität, Metadaten)** | **verbessert Session 4** |
+| **XLSX Export (Hyperlinks, Farben, Meta-Sheet)** | **verbessert Session 4** |
 
 ## Bekannte Probleme / Lücken
 
 - **Build nicht ausgeführt** — `npm run build` steht aus; TypeScript-Fehler möglich
-- **DB Migration ausstehend** — neues Schema (User, Project, LeadList) noch nicht migriert
+- **DB Migration ausstehend** — Schema hat neues `Lead.sourceName` Feld (nullable, rückwärtskompatibel)
 - **AUTH_SECRET muss gesetzt werden** — in .env, nie committen
 - **Playwright nicht aktiv** — installiert aber kein Source nutzt es
 - **Gelbe Seiten Selektoren heuristisch** — können brechen
@@ -69,4 +74,4 @@ Auth via next-auth (JWT), plan-basierte Limits, Billing-Felder vorbereitet.
 
 - next-auth v5 beta: kann noch API-Änderungen haben
 - Zod v4: leicht unterschiedliche API zu v3 (prüfen beim Build)
-- Migration muss sorgfältig getestet werden (neue Non-Null FKs)
+- Migration muss sorgfältig getestet werden (neue Non-Null FKs + sourceName)

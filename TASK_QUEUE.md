@@ -16,6 +16,7 @@
 - [2026-03-11] MVP vollständig implementiert: Scraper, Parser, Exporte, API, UI, Docker
 - [2026-03-11] .gitignore-Bug behoben (*.json hatte Konfig-Dateien ausgeschlossen)
 - [2026-03-11] SaaS Foundation implementiert: User/Project/LeadList, next-auth JWT, Middleware, Plan-Limits, Auth-UI, Projekt-UI
+- [2026-03-11] Datenqualität Session 4: Normalisierung, Confidence-Scoring, Deduplication-Merge, sourceName-Tracking, Export-Verbesserungen
 
 ---
 
@@ -54,6 +55,11 @@
 - **Datei:** lib/scraper/sources/gelbeseiten.ts
 - **Problem:** Cheerio-Selektoren sind heuristisch, können brechen
 - **Erwartetes Ergebnis:** Reale Ergebnisse aus gelbeseiten.de, oder Selektoren angepasst
+
+### [P2] UI: Confidence-Tier in LeadsTable anzeigen
+- **Status:** TODO
+- **Datei:** components/leads/LeadsTable.tsx
+- **Erwartetes Ergebnis:** HIGH/MEDIUM/LOW Badge neben dem Firmennamen oder in eigener Spalte
 
 ### [P2] Lead-Detail-Link aus der Tabelle ergänzen
 - **Status:** TODO
