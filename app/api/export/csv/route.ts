@@ -24,8 +24,15 @@ export async function GET(req: NextRequest) {
       orderBy: [{ confidence: "desc" }, { createdAt: "desc" }],
     });
 
-    const csv = leadsToCSV(leads);
-    const filename = `leads_${new Date().toISOString().split("T")[0]}.csv`;
+    const exportedAt = new Date();
+    const csv = leadsToCSV(leads, {
+      exportedAt,
+      jobId: jobId ?? undefined,
+      projectId: projectId ?? undefined,
+      statusFilter: status ?? undefined,
+      totalLeads: leads.length,
+    });
+    const filename = `leads_${exportedAt.toISOString().split("T")[0]}.csv`;
 
     return new NextResponse(csv, {
       headers: {

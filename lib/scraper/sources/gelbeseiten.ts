@@ -108,12 +108,14 @@ export async function scrapeGelbeSeiten(
         : sourceUrl
         ? BASE_URL + sourceUrl
         : searchUrl,
+      sourceName: "gelbeseiten",
       confidence: 0,
     };
-    lead.confidence = computeConfidence(lead);
+    lead.confidence = computeConfidence(lead).score;
     leads.push(lead);
-
-    await sleep(DELAY_MS);
+    // Note: sleep is only meaningful at HTTP request boundaries.
+    // This scraper currently fetches one page; delay here is a no-op.
+    // Re-enable if pagination / detail-page fetching is added.
   }
 
   return leads;
