@@ -117,10 +117,12 @@ model Lead {
   sourceUrl   String?
   sourceName  String?    // which scraper produced this lead (overpass | gelbeseiten)
   confidence  Float?
+  tags        String[]   @default([])
 
   status      LeadStatus @default(NEW)
   notes       String?
   contactedAt DateTime?
+  followUpAt  DateTime?  // when to follow up with this lead
 
   jobId       String
   job         SearchJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
